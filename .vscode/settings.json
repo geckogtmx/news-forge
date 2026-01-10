@@ -1,5 +1,7 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
+  "errorLens.followCursor": "activeLine",
+  "fusion.visualCanvas": true,
   "typescript.tsc.autoDetect": "off",
   "json.schemas": [
     {
