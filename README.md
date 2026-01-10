@@ -1,91 +1,174 @@
-# electron-vite-react
+# NewsForge
 
-[![awesome-vite](https://awesome.re/mentioned-badge.svg)](https://github.com/vitejs/awesome-vite)
-![GitHub stars](https://img.shields.io/github/stars/caoxiemeihao/vite-react-electron?color=fa6470)
-![GitHub issues](https://img.shields.io/github/issues/caoxiemeihao/vite-react-electron?color=d8b22d)
-![GitHub license](https://img.shields.io/github/license/caoxiemeihao/vite-react-electron)
-[![Required Node.JS >= 14.18.0 || >=16.0.0](https://img.shields.io/static/v1?label=node&message=14.18.0%20||%20%3E=16.0.0&logo=node.js&color=3f893e)](https://nodejs.org/about/releases)
+An AI-powered news aggregation and research desktop application built with Electron, React, and TypeScript.
 
-English | [简体中文](README.zh-CN.md)
+## 🎯 Overview
 
-## 👀 Overview
+NewsForge is a local-first desktop application designed to streamline news research and content creation workflows. It aggregates news from multiple sources (RSS feeds, Gmail, YouTube, websites), uses AI to compile and analyze information, and exports curated content packages for further use.
 
-📦 Ready out of the box  
-🎯 Based on the official [template-react-ts](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts), project structure will be familiar to you  
-🌱 Easily extendable and customizable  
-💪 Supports Node.js API in the renderer process  
-🔩 Supports C/C++ native addons  
-🐞 Debugger configuration included  
-🖥 Easy to implement multiple windows  
+### Key Features
 
-## 🛫 Quick Setup
+- **Multi-Source Aggregation**: Collect news from RSS feeds, Gmail newsletters, YouTube channels, and websites
+- **AI-Powered Compilation**: Automatically group and summarize related headlines using LLM technology
+- **Content Package Creation**: Generate YouTube-ready content with titles, descriptions, and script outlines
+- **Obsidian Integration**: Export archives directly to your Obsidian vault for long-term knowledge management
+- **Local-First**: All data stored locally in SQLite for privacy and offline access
+- **Token Tracking**: Monitor AI usage and costs with built-in analytics
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18 + TypeScript + Tailwind CSS + shadcn/ui
+- **Desktop**: Electron 33
+- **Database**: SQLite + Drizzle ORM
+- **AI**: LangChain + Claude/GPT integration
+- **Build**: Vite + electron-builder
+- **Testing**: Playwright + Vitest
+
+## 📋 Prerequisites
+
+- Node.js >= 16.0.0
+- npm or pnpm
+
+## 🚀 Quick Start
+
+### Installation
 
 ```sh
-# clone the project
-git clone https://github.com/electron-vite/electron-vite-react.git
+# Clone the repository
+git clone https://github.com/geckogtmx/news-forge.git
 
-# enter the project directory
-cd electron-vite-react
+# Navigate to project directory
+cd news-forge
 
-# install dependency
+# Install dependencies
 npm install
+```
 
-# develop
+### Development
+
+```sh
+# Start the development server
 npm run dev
 ```
 
-## 🐞 Debug
+This will launch the Electron app with hot-reload enabled for both the main process and renderer.
 
-![electron-vite-react-debug.gif](/electron-vite-react-debug.gif)
+### Building
 
-## 📂 Directory structure
-
-Familiar React application structure, just with `electron` folder on the top :wink:  
-*Files in this folder will be separated from your React application and built into `dist-electron`*  
-
-```tree
-├── electron                                 Electron-related code
-│   ├── main                                 Main-process source code
-│   └── preload                              Preload-scripts source code
-│
-├── release                                  Generated after production build, contains executables
-│   └── {version}
-│       ├── {os}-{os_arch}                   Contains unpacked application executable
-│       └── {app_name}_{version}.{ext}       Installer for the application
-│
-├── public                                   Static assets
-└── src                                      Renderer source code, your React application
+```sh
+# Build for production
+npm run build
 ```
 
-<!--
-## 🚨 Be aware
+The built application will be available in the `release` directory.
 
-This template integrates Node.js API to the renderer process by default. If you want to follow **Electron Security Concerns** you might want to disable this feature. You will have to expose needed API by yourself.  
+### Testing
 
-To get started, remove the option as shown below. This will [modify the Vite configuration and disable this feature](https://github.com/electron-vite/vite-plugin-electron-renderer#config-presets-opinionated).
+```sh
+# Run unit tests
+npm test
 
-```diff
-# vite.config.ts
-
-export default {
-  plugins: [
-    ...
--   // Use Node.js API in the Renderer-process
--   renderer({
--     nodeIntegration: true,
--   }),
-    ...
-  ],
-}
+# Run end-to-end tests (requires build)
+npm run pretest
+npm test
 ```
--->
 
-## 🔧 Additional features
+## 📂 Project Structure
 
-1. electron-updater 👉 [see docs](src/components/update/README.md)
-1. playwright
+```
+news-forge/
+├── electron/                   # Electron main process code
+│   ├── main/                   # Main process source
+│   │   ├── db/                 # Database schema and connection
+│   │   ├── index.ts            # Main entry point
+│   │   └── update.ts           # Auto-updater logic
+│   └── preload/                # Preload scripts
+├── src/                        # React renderer process
+│   ├── components/             # Reusable UI components
+│   ├── pages/                  # Application pages/routes
+│   ├── contexts/               # React contexts
+│   ├── hooks/                  # Custom React hooks
+│   └── lib/                    # Utilities and helpers
+├── public/                     # Static assets
+├── build/                      # Application icons
+└── drizzle/                    # Database migrations
+```
 
-## ❔ FAQ
+## 🔄 Workflow
 
-- [C/C++ addons, Node.js modules - Pre-Bundling](https://github.com/electron-vite/vite-plugin-electron-renderer#dependency-pre-bundling)
-- [dependencies vs devDependencies](https://github.com/electron-vite/vite-plugin-electron-renderer#dependencies-vs-devdependencies)
+1. **Configure Sources**: Add RSS feeds, Gmail filters, YouTube channels, or websites
+2. **Start a Run**: Initiate news collection from all active sources
+3. **Review Headlines**: Browse and select relevant raw headlines
+4. **AI Compilation**: Let AI group related stories and generate summaries
+5. **Create Content**: Generate content packages with titles, descriptions, and outlines
+6. **Export**: Archive to Obsidian or export for content creation
+
+## 🗄️ Database Schema
+
+NewsForge uses SQLite with the following main tables:
+
+- `users` - User profiles and authentication
+- `newsSources` - Configured news sources
+- `runs` - Workflow execution tracking
+- `rawHeadlines` - Collected news items
+- `compiledItems` - AI-generated compilations
+- `contentPackages` - Export-ready content
+- `runArchives` - Historical data and Obsidian exports
+- `userSettings` - User preferences and configuration
+
+## ⚙️ Configuration
+
+### Setting up News Sources
+
+1. Navigate to **Sources** page
+2. Click **Add Source**
+3. Configure source type (RSS, Gmail, YouTube, Website)
+4. Set topics and filters
+5. Activate the source
+
+### Obsidian Integration
+
+1. Go to **Settings**
+2. Set your Obsidian vault path
+3. Configure export format preferences
+4. Archives will automatically export to your vault
+
+### AI Model Configuration
+
+Configure your preferred LLM in Settings:
+- Default: Claude 3.5 Sonnet
+- Supports OpenAI GPT models
+- Token usage tracking included
+
+## 🔐 Security
+
+- All data stored locally on your machine
+- No cloud sync (by design)
+- API keys stored securely in user data directory
+- Context isolation enabled in production builds
+
+## 🐞 Debugging
+
+The project includes VSCode debug configurations:
+
+1. Open in VSCode
+2. Set breakpoints in your code
+3. Press F5 to start debugging
+4. DevTools automatically open in development mode
+
+## 📝 License
+
+MIT License - see [LICENSE](LICENSE) file for details
+
+## 🤝 Contributing
+
+This is a personal project, but suggestions and feedback are welcome via GitHub issues.
+
+## 🔗 Links
+
+- [Repository](https://github.com/geckogtmx/news-forge)
+- [Issue Tracker](https://github.com/geckogtmx/news-forge/issues)
+
+---
+
+**Status**: 🚧 Active Development - Core features in progress
