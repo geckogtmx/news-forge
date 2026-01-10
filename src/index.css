@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 1 0 0;
+    --foreground: 0.235 0.015 65;
+    --card: 1 0 0;
+    --card-foreground: 0.235 0.015 65;
+    --popover: 1 0 0;
+    --popover-foreground: 0.235 0.015 65;
+    --primary: 0.4 0.15 260; /* Adjusted fallback Blue */
+    --primary-foreground: 0.985 0 0;
+    --secondary: 0.98 0.001 286.375;
+    --secondary-foreground: 0.4 0.015 65;
+    --muted: 0.967 0.001 286.375;
+    --muted-foreground: 0.552 0.016 285.938;
+    --accent: 0.967 0.001 286.375;
+    --accent-foreground: 0.141 0.005 285.823;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.92 0.004 286.32;
+    --input: 0.92 0.004 286.32;
+    --ring: 0.623 0.214 259.815;
+    --radius: 0.5rem;
+    
+    --sidebar: 0.985 0 0;
+    --sidebar-foreground: 0.235 0.015 65;
+    --sidebar-primary: 0.4 0.15 260;
+    --sidebar-primary-foreground: 0.985 0 0;
+    --sidebar-accent: 0.967 0.001 286.375;
+    --sidebar-accent-foreground: 0.141 0.005 285.823;
+    --sidebar-border: 0.92 0.004 286.32;
+    --sidebar-ring: 0.623 0.214 259.815;
+  }
+
+  .dark {
+    --background: 0.08 0 0;
+    --foreground: 0.95 0.001 0;
+    --card: 0.12 0.001 0;
+    --card-foreground: 0.95 0.001 0;
+    --popover: 0.12 0.001 0;
+    --popover-foreground: 0.95 0.001 0;
+    --primary: 0.5 0.15 260;
+    --primary-foreground: 0.985 0 0;
+    --secondary: 0.15 0.001 0;
+    --secondary-foreground: 0.95 0.001 0;
+    --muted: 0.18 0.001 0;
+    --muted-foreground: 0.65 0.001 0;
+    --accent: 0.55 0.2 260;
+    --accent-foreground: 0.95 0.001 0;
+    --destructive: 0.704 0.191 22.216;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.2 0.001 0;
+    --input: 0.15 0.001 0;
+    --ring: 0.55 0.2 260;
+    
+    --sidebar: 0.12 0.001 0;
+    --sidebar-foreground: 0.95 0.001 0;
+    --sidebar-accent: 0.55 0.2 260;
+    --sidebar-accent-foreground: 0.95 0.001 0;
+    --sidebar-border: 0.2 0.001 0;
+    --sidebar-ring: 0.55 0.2 260;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
