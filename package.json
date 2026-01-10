@@ -1,9 +1,13 @@
 {
-  "name": "electron-vite-react",
-  "version": "2.2.0",
+  "name": "news-forge",
+  "version": "0.1.0",
   "main": "dist-electron/main/index.js",
-  "description": "Electron Vite React boilerplate.",
-  "author": "草鞋没号 <308487730@qq.com>",
+  "description": "AI-powered news aggregation and research desktop application",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geckogtmx/news-forge"
+  },
+  "author": "",
   "license": "MIT",
   "private": true,
   "debug": {
