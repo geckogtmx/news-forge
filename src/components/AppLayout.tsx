@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { LogOut, Home, Settings, Zap, Archive } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -9,7 +8,6 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const { user, logout } = useAuth();
   const [location] = useLocation();
 
   const isActive = (path: string) => location === path;
@@ -22,8 +20,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { path: "/archive", label: "Archive", icon: Archive },
   ];
 
+  // Placeholder user - authentication will be implemented later
+  const user = { name: "Local User" };
+
   const handleLogout = async () => {
-    await logout();
+    // Logout functionality to be implemented
+    console.log("Logout clicked");
   };
 
   return (
@@ -45,11 +47,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <Link
                 key={item.path}
                 href={item.path}
-                className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                  active
+                className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${active
                     ? "bg-accent text-accent-foreground"
                     : "text-foreground hover:bg-muted"
-                }`}
+                  }`}
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-sm font-medium">{item.label}</span>
@@ -62,7 +63,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="p-4 border-t border-border space-y-3">
           <div className="text-xs">
             <p className="text-muted-foreground">Logged in as</p>
-            <p className="text-foreground font-medium truncate">{user?.name || user?.email}</p>
+            <p className="text-foreground font-medium truncate">{user?.name}</p>
           </div>
           <Button
             variant="outline"

@@ -109,6 +109,15 @@ export default function Dashboard() {
                   </CardHeader>
                 </Card>
               </Link>
+
+              <Link href="/test/rss">
+                <Card className="bg-card border-border hover:border-accent transition-colors cursor-pointer h-full">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Test RSS Form</CardTitle>
+                    <CardDescription>Test RSS feed integration</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
             </div>
           </div>
 
