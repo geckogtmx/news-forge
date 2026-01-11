@@ -1,95 +1,85 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSources } from '@/hooks/useSources';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Search, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
-import { useRss } from '@/hooks/useRss';
-import { useSources } from '@/hooks/useSources';
-
-interface FeedItem {
-    title?: string;
-    link?: string;
-    contentSnippet?: string;
-}
-
-interface Feed {
-    title?: string;
-    description?: string;
-    link?: string;
-    items: FeedItem[];
-}
-
-interface DiscoveredFeed {
-    url: string;
-    title?: string;
-    type: 'rss' | 'atom' | 'json';
-}
+import { Loader2, AlertCircle, CheckCircle2, Search } from 'lucide-react';
 
 interface RssSourceFormProps {
     userId: number;
     onSuccess?: () => void;
     onCancel?: () => void;
+    initialValues?: any;
 }
 
-export function RssSourceForm({ userId, onSuccess, onCancel }: RssSourceFormProps) {
+export function RssSourceForm({ userId, onSuccess, onCancel, initialValues }: RssSourceFormProps) {
+    const { createSource, updateSource } = useSources();
     const [url, setUrl] = useState('');
     const [name, setName] = useState('');
     const [topics, setTopics] = useState('');
     const [isActive, setIsActive] = useState(true);
+    const [preview, setPreview] = useState<{ title: string; description?: string } | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const [feedPreview, setFeedPreview] = useState<Feed | null>(null);
-    const [discoveredFeeds, setDiscoveredFeeds] = useState<DiscoveredFeed[]>([]);
-    const [validationResult, setValidationResult] = useState<{ valid: boolean; error?: string; title?: string } | null>(null);
+    // Load initial values if editing
+    useEffect(() => {
+        if (initialValues) {
+            setName(initialValues.name);
+            setIsActive(initialValues.isActive === 1 || initialValues.isActive === true);
 
-    const { previewFeed, discoverFeeds, validateFeed, loading: rssLoading, error: rssError } = useRss();
-    const { createSource, loading: sourceLoading } = useSources();
+            // Parse topics
+            try {
+                const parsedTopics = typeof initialValues.topics === 'string'
+                    ? JSON.parse(initialValues.topics)
+                    : initialValues.topics;
+                setTopics(Array.isArray(parsedTopics) ? parsedTopics.join(', ') : '');
+            } catch (e) {
+                setTopics('');
+            }
 
-    const handleDiscoverFeeds = async () => {
-        if (!url.trim()) return;
-
-        setDiscoveredFeeds([]);
-        setFeedPreview(null);
-        setValidationResult(null);
-
-        const feeds = await discoverFeeds(url);
-        if (feeds && feeds.length > 0) {
-            setDiscoveredFeeds(feeds);
-        }
-    };
-
-    const handlePreviewFeed = async (feedUrl?: string) => {
-        const urlToPreview = feedUrl || url;
-        if (!urlToPreview.trim()) return;
-
-        setFeedPreview(null);
-        setValidationResult(null);
-
-        // Validate first
-        const validation = await validateFeed(urlToPreview);
-        setValidationResult(validation || null);
-
-        if (validation?.valid) {
-            const preview = await previewFeed(urlToPreview);
-            if (preview) {
-                setFeedPreview(preview);
-                // Auto-fill name from feed title
-                if (preview.title) {
-                    setName(preview.title);
-                }
+            // Parse config for URL
+            try {
+                const config = typeof initialValues.config === 'string'
+                    ? JSON.parse(initialValues.config)
+                    : initialValues.config;
+                setUrl(config.url || '');
+            } catch (e) {
+                setUrl('');
             }
         }
-    };
+    }, [initialValues]);
 
-    const handleSelectDiscoveredFeed = (feed: DiscoveredFeed) => {
-        setUrl(feed.url);
-        if (feed.title && !name) {
-            setName(feed.title);
+    const handlePreview = async () => {
+        if (!url) return;
+        setIsLoading(true);
+        setError(null);
+        try {
+            // Use window.electron directly as before
+            const items = await window.electron.ipcRenderer.invoke('rss:fetch', url);
+            if (items && items.length > 0) {
+                setPreview({
+                    title: items[0].title || 'Feed Preview',
+                    description: items[0].contentSnippet?.substring(0, 100) + '...'
+                });
+
+                // Auto-fill name if empty and we have a title from feed but only for new sources
+                if (!name && !initialValues) {
+                    // We could parse feed title here if we had it from the 'rss:fetch' result more cleanly
+                    // For now user sets name
+                }
+            } else {
+                setError('No items found or invalid feed');
+            }
+        } catch (err) {
+            setError('Failed to fetch feed. Please check the URL.');
+        } finally {
+            setIsLoading(false);
         }
-        setDiscoveredFeeds([]);
-        handlePreviewFeed(feed.url);
     };
 
     const handleSave = async () => {
@@ -100,221 +90,107 @@ export function RssSourceForm({ userId, onSuccess, onCancel }: RssSourceFormProp
             .map(t => t.trim())
             .filter(t => t.length > 0);
 
-        const source = await createSource({
-            userId,
-            name,
-            type: 'rss',
-            config: { url },
-            topics: topicsArray,
-            isActive,
-        });
+        const config = { url };
+        let result;
 
-        if (source) {
+        if (initialValues) {
+            result = await updateSource(initialValues.id, {
+                name,
+                config,
+                topics: topicsArray,
+                isActive,
+            });
+        } else {
+            result = await createSource({
+                userId,
+                name,
+                type: 'rss',
+                config,
+                topics: topicsArray,
+                isActive,
+            });
+        }
+
+        if (result) {
             onSuccess?.();
         }
     };
 
-    const isFormValid = url.trim() && name.trim() && validationResult?.valid;
-
     return (
         <div className="space-y-6">
-            {/* URL Input and Discovery */}
-            <div className="space-y-2">
-                <Label htmlFor="url">Feed URL or Website</Label>
-                <div className="flex gap-2">
-                    <Input
-                        id="url"
-                        type="url"
-                        placeholder="https://example.com/feed or https://example.com"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                handlePreviewFeed();
-                            }
-                        }}
-                    />
-                    <Button
-                        variant="outline"
-                        onClick={handleDiscoverFeeds}
-                        disabled={rssLoading || !url.trim()}
-                    >
-                        {rssLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                            <Search className="h-4 w-4" />
-                        )}
-                        Discover
-                    </Button>
-                    <Button
-                        onClick={() => handlePreviewFeed()}
-                        disabled={rssLoading || !url.trim()}
-                    >
-                        {rssLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                            'Preview'
-                        )}
-                    </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                    Enter a feed URL directly or a website URL to discover feeds
-                </p>
-            </div>
-
-            {/* Validation Status */}
-            {validationResult && (
-                <Alert variant={validationResult.valid ? 'default' : 'destructive'}>
-                    <div className="flex items-center gap-2">
-                        {validationResult.valid ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : (
-                            <XCircle className="h-4 w-4" />
-                        )}
-                        <AlertDescription>
-                            {validationResult.valid
-                                ? `Valid feed${validationResult.title ? `: ${validationResult.title}` : ''}`
-                                : `Invalid feed: ${validationResult.error}`}
-                        </AlertDescription>
+            <div className="grid gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="url">RSS Feed URL</Label>
+                    <div className="flex gap-2">
+                        <Input
+                            id="url"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            placeholder="https://example.com/feed.xml"
+                            disabled={isLoading}
+                        />
+                        <Button variant="secondary" onClick={handlePreview} disabled={isLoading || !url}>
+                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                        </Button>
                     </div>
-                </Alert>
-            )}
+                </div>
 
-            {/* Discovered Feeds */}
-            {discoveredFeeds.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Discovered Feeds</CardTitle>
-                        <CardDescription>Select a feed to preview</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        {discoveredFeeds.map((feed, index) => (
-                            <button
-                                key={index}
-                                onClick={() => handleSelectDiscoveredFeed(feed)}
-                                className="w-full text-left p-3 rounded-md border hover:bg-accent transition-colors"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium truncate">{feed.title || 'Untitled Feed'}</p>
-                                        <p className="text-sm text-muted-foreground truncate">{feed.url}</p>
-                                    </div>
-                                    <Badge variant="outline" className="ml-2">
-                                        {feed.type.toUpperCase()}
-                                    </Badge>
-                                </div>
-                            </button>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
+                {error && (
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                )}
 
-            {/* Feed Preview */}
-            {feedPreview && (
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                                <CardTitle className="text-base">{feedPreview.title}</CardTitle>
-                                <CardDescription className="line-clamp-2">
-                                    {feedPreview.description}
-                                </CardDescription>
-                            </div>
-                            {feedPreview.link && (
-                                <a
-                                    href={feedPreview.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="ml-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <ExternalLink className="h-4 w-4" />
-                                </a>
-                            )}
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm font-medium mb-2">Recent Items ({feedPreview.items.length})</p>
-                        <div className="space-y-2">
-                            {feedPreview.items.slice(0, 5).map((item, index) => (
-                                <div key={index} className="p-2 rounded-md border">
-                                    <p className="font-medium text-sm line-clamp-1">{item.title}</p>
-                                    {item.contentSnippet && (
-                                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                                            {item.contentSnippet}
-                                        </p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+                {preview && (
+                    <Alert className="bg-muted/50">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <AlertTitle>Valid Feed Found</AlertTitle>
+                        <AlertDescription className="mt-2 text-xs text-muted-foreground">
+                            <strong>Latest:</strong> {preview.title}
+                            <div className="mt-1 line-clamp-2">{preview.description}</div>
+                        </AlertDescription>
+                    </Alert>
+                )}
 
-            {/* Source Details */}
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="name">Source Name *</Label>
+                <div className="grid gap-2">
+                    <Label htmlFor="name">Source Name</Label>
                     <Input
                         id="name"
-                        placeholder="e.g., TechCrunch"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        placeholder="My Tech News"
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="topics">Topics (comma-separated)</Label>
+                <div className="grid gap-2">
+                    <Label htmlFor="topics">Topics</Label>
                     <Input
                         id="topics"
-                        placeholder="e.g., tech, startups, AI"
                         value={topics}
                         onChange={(e) => setTopics(e.target.value)}
+                        placeholder="tech, ai, startups (comma separated)"
                     />
-                    <p className="text-sm text-muted-foreground">
-                        Add topics to help organize and filter headlines
-                    </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <input
-                        type="checkbox"
-                        id="isActive"
-                        checked={isActive}
-                        onChange={(e) => setIsActive(e.target.checked)}
-                        className="h-4 w-4 rounded border-input"
-                    />
-                    <Label htmlFor="isActive" className="cursor-pointer">
-                        Active (fetch headlines from this source)
+                <div className="flex items-center justify-between space-x-2 border p-3 rounded-md">
+                    <Label htmlFor="active-mode" className="flex flex-col space-y-1">
+                        <span>Active Status</span>
+                        <span className="font-normal text-xs text-muted-foreground">Enable this source for news compilation</span>
                     </Label>
+                    <Switch
+                        id="active-mode"
+                        checked={isActive}
+                        onCheckedChange={setIsActive}
+                    />
                 </div>
             </div>
 
-            {/* Error Display */}
-            {rssError && (
-                <Alert variant="destructive">
-                    <AlertDescription>{rssError}</AlertDescription>
-                </Alert>
-            )}
-
-            {/* Actions */}
             <div className="flex justify-end gap-2">
-                {onCancel && (
-                    <Button variant="outline" onClick={onCancel}>
-                        Cancel
-                    </Button>
-                )}
-                <Button
-                    onClick={handleSave}
-                    disabled={!isFormValid || sourceLoading}
-                >
-                    {sourceLoading ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Saving...
-                        </>
-                    ) : (
-                        'Save Source'
-                    )}
+                <Button variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button onClick={handleSave} disabled={!url || !name}>
+                    {initialValues ? 'Update Source' : 'Save Source'}
                 </Button>
             </div>
         </div>

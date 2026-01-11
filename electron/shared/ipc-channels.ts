@@ -128,6 +128,20 @@ export const RSS_CHANNELS = {
     PREVIEW_FEED: 'rss:preview-feed',
 } as const;
 
+// Gmail channels
+export const GMAIL_CHANNELS = {
+    IS_CONFIGURED: 'gmail:is-configured',
+    IS_AUTHENTICATED: 'gmail:is-authenticated',
+    GET_AUTH_URL: 'gmail:get-auth-url',
+    OPEN_AUTH_URL: 'gmail:open-auth-url',
+    HANDLE_CALLBACK: 'gmail:handle-callback',
+    REVOKE_AUTH: 'gmail:revoke-auth',
+    FETCH_NEWSLETTERS: 'gmail:fetch-newsletters',
+    GET_LABELS: 'gmail:get-labels',
+    TEST_CONNECTION: 'gmail:test-connection',
+    EXTRACT_HEADLINES: 'gmail:extract-headlines',
+} as const;
+
 // Combine all channels for easy access
 export const IPC_CHANNELS = {
     USER: USER_CHANNELS,
@@ -140,4 +154,6 @@ export const IPC_CHANNELS = {
     SETTINGS: SETTINGS_CHANNELS,
     PROGRESS: PROGRESS_CHANNELS,
     RSS: RSS_CHANNELS,
+    GMAIL: GMAIL_CHANNELS,
 } as const;
+

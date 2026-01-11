@@ -777,5 +777,100 @@ export function registerIpcHandlers() {
         }
     });
 
+    // ============================================================
+    // GMAIL HANDLERS
+    // ============================================================
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.IS_CONFIGURED, async () => {
+        try {
+            const isConfigured = services.gmail.isConfigured();
+            return { success: true, data: isConfigured };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.IS_CONFIGURED, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.IS_AUTHENTICATED, async (_event, userId: number) => {
+        try {
+            const isAuthenticated = await services.gmail.isAuthenticated(userId);
+            return { success: true, data: isAuthenticated };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.IS_AUTHENTICATED, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.GET_AUTH_URL, async () => {
+        try {
+            const url = services.gmail.getAuthUrl();
+            return { success: true, data: url };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.GET_AUTH_URL, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.OPEN_AUTH_URL, async (_event, userId: number) => {
+        try {
+            const result = await services.gmail.openAuthUrl(userId);
+            return { success: true, data: result };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.OPEN_AUTH_URL, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.HANDLE_CALLBACK, async (_event, code: string, userId: number) => {
+        try {
+            const tokens = await services.gmail.handleAuthCallback(code, userId);
+            return { success: true, data: tokens };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.HANDLE_CALLBACK, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.REVOKE_AUTH, async (_event, userId: number) => {
+        try {
+            const result = await services.gmail.revokeAuth(userId);
+            return { success: true, data: result };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.REVOKE_AUTH, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.FETCH_NEWSLETTERS, async (_event, userId: number, filters: any) => {
+        try {
+            const emails = await services.gmail.fetchNewsletters(userId, filters);
+            return { success: true, data: emails };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.FETCH_NEWSLETTERS, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.GET_LABELS, async (_event, userId: number) => {
+        try {
+            const labels = await services.gmail.getLabels(userId);
+            return { success: true, data: labels };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.GET_LABELS, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.TEST_CONNECTION, async (_event, userId: number, filters: any) => {
+        try {
+            const result = await services.gmail.testConnection(userId, filters);
+            return { success: true, data: result };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.TEST_CONNECTION, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GMAIL.EXTRACT_HEADLINES, async (_event, emails: any[]) => {
+        try {
+            const headlines = services.gmail.extractHeadlines(emails);
+            return { success: true, data: headlines };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.GMAIL.EXTRACT_HEADLINES, error);
+        }
+    });
+
     console.log('[IPC] All handlers registered successfully');
 }
+

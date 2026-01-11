@@ -216,40 +216,40 @@
 ### 3.2 Gmail Integration
 
 #### Gmail API Setup
-- [ ] Install `googleapis` package
-- [ ] Create OAuth2 configuration
-  - [ ] Set up Google Cloud project
-  - [ ] Enable Gmail API
-  - [ ] Configure OAuth consent screen
-  - [ ] Download credentials
-- [ ] Create `electron/main/services/gmail.service.ts`
-  - [ ] `authenticateUser()` - OAuth2 flow
-  - [ ] `getAuthUrl()` - Generate auth URL
-  - [ ] `handleAuthCallback(code)` - Exchange code for tokens
-  - [ ] Store tokens securely in settings
+- [x] Install `googleapis` package
+- [x] Create OAuth2 configuration
+  - [x] Set up Google Cloud project
+  - [x] Enable Gmail API
+  - [x] Configure OAuth consent screen
+  - [x] Download credentials
+- [x] Create `electron/main/services/gmail.service.ts`
+  - [x] `authenticateUser()` - OAuth2 flow
+  - [x] `getAuthUrl()` - Generate auth URL
+  - [x] `handleAuthCallback(code)` - Exchange code for tokens
+  - [x] Store tokens securely in settings
 
 #### Gmail Fetching Service
-- [ ] `fetchEmails(userId, filters)` - Fetch matching emails
-  - [ ] Support for label filters
-  - [ ] Support for sender filters
-  - [ ] Support for subject filters
-  - [ ] Support for date range
-- [ ] `parseEmailContent(email)` - Extract relevant text
-  - [ ] HTML to plain text conversion
-  - [ ] Extract links from newsletters
-  - [ ] Parse structured newsletter formats
-- [ ] `extractHeadlines(emails)` - Convert to headline format
-- [ ] Implement rate limiting per Gmail quotas
-- [ ] Write unit tests with mocked Gmail API
+- [x] `fetchEmails(userId, filters)` - Fetch matching emails
+  - [x] Support for label filters
+  - [x] Support for sender filters
+  - [x] Support for subject filters
+  - [x] Support for date range
+- [x] `parseEmailContent(email)` - Extract relevant text
+  - [x] HTML to plain text conversion
+  - [x] Extract links from newsletters
+  - [x] Parse structured newsletter formats
+- [x] `extractHeadlines(emails)` - Convert to headline format
+- [x] Implement rate limiting per Gmail quotas
+- [x] Write unit tests with mocked Gmail API
 
 #### Gmail UI Components
-- [ ] Create `src/components/sources/GmailSourceForm.tsx`
-  - [ ] OAuth2 authentication button
-  - [ ] Label/sender/subject filter inputs
-  - [ ] Test connection button
-  - [ ] Preview fetched emails
-- [ ] Add Gmail source to source list UI
-- [ ] Show authentication status indicator
+- [x] Create `src/components/sources/GmailSourceForm.tsx`
+  - [x] OAuth2 authentication button
+  - [x] Label/sender/subject filter inputs
+  - [x] Test connection button
+  - [x] Preview fetched emails
+- [x] Add Gmail source to source list UI
+- [x] Show authentication status indicator
 
 ### 3.3 YouTube Integration
 
@@ -529,14 +529,14 @@
 - [ ] Charts for analytics (using recharts or similar)
 
 #### Sources Management Page
-- [ ] Create `src/pages/SourcesPage.tsx`
-  - [ ] List all configured sources
-  - [ ] Filter by type (RSS, Gmail, YouTube, Website)
+- [x] Create `src/pages/SourcesPage.tsx`
+  - [x] List all configured sources
+  - [x] Filter by type (RSS, Gmail, YouTube, Website)
   - [ ] Search sources
-  - [ ] Add new source button
-  - [ ] Edit source inline or in modal
-  - [ ] Delete source with confirmation
-  - [ ] Toggle active/inactive
+  - [x] Add new source button
+  - [x] Edit source inline or in modal
+  - [x] Delete source with confirmation
+  - [x] Toggle active/inactive
   - [ ] Show last fetch timestamp
   - [ ] Show total headlines from each source
 

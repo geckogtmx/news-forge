@@ -3,11 +3,36 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
+import { config } from 'dotenv'
 import { update } from './update'
 import { registerIpcHandlers } from './ipc/handlers'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// Load environment variables from .env file
+// Try multiple paths to find the .env file
+const possibleEnvPaths = [
+  path.resolve(__dirname, '../../.env'), // Production/Dist structure
+  path.resolve(process.cwd(), '.env'),   // Development root
+];
+
+let envLoaded = false;
+for (const envPath of possibleEnvPaths) {
+  const result = config({ path: envPath });
+  if (!result.error) {
+    console.log(`Dotenv loaded successfully from: ${envPath}`);
+    envLoaded = true;
+    break;
+  }
+}
+
+if (!envLoaded) {
+  console.error('Failed to load .env file from any expected location.');
+}
+
+console.log('Current working directory:', process.cwd());
+console.log('GMAIL_CLIENT_ID status:', process.env.GMAIL_CLIENT_ID ? 'Configured' : 'Missing');
 
 // The built directory structure
 //
@@ -15,19 +40,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // │ ├─┬ main
 // │ │ └── index.js    > Electron-Main
 // │ └─┬ preload
-// │   └── index.mjs   > Preload-Scripts
+// │   └── index.mjs    > Preload-Scripts
 // ├─┬ dist
 // │ └── index.html    > Electron-Renderer
 //
-process.env.APP_ROOT = path.join(__dirname, '../..')
-
-export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
-export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
-export const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
-
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
-  ? path.join(process.env.APP_ROOT, 'public')
-  : RENDERER_DIST
+process.env.DIST_ELECTRON = path.join(__dirname, '../')
+process.env.DIST = path.join(process.env.DIST_ELECTRON, '../dist')
+process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
+  ? path.join(process.env.DIST_ELECTRON, '../public')
+  : process.env.DIST
 
 // Disable GPU Acceleration for Windows 7
 if (os.release().startsWith('6.1')) app.disableHardwareAcceleration()
@@ -40,9 +61,20 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0)
 }
 
+// Remove this if you do not want your users to be asked
+// to install the newer version of the app.
+// In the default case, the license is perfectly appropriate.
+// e.g: "Auto-updater only available for the PRO plan"
+Object.defineProperty(app, 'isPackaged', {
+  get() {
+    return true
+  }
+})
+
 let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../preload/index.mjs')
-const indexHtml = path.join(RENDERER_DIST, 'index.html')
+const url = process.env.VITE_DEV_SERVER_URL
+const indexHtml = path.join(process.env.DIST, 'index.html')
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -55,12 +87,15 @@ async function createWindow() {
 
       // Consider using contextBridge.exposeInMainWorld
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
-      // contextIsolation: false,
+      contextIsolation: true,
     },
   })
 
-  if (VITE_DEV_SERVER_URL) { // #298
-    win.loadURL(VITE_DEV_SERVER_URL)
+  // Register all IPC handlers
+  registerIpcHandlers(ipcMain);
+
+  if (url) { // electron-vite-react:dev
+    win.loadURL(url)
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
   } else {
@@ -78,12 +113,9 @@ async function createWindow() {
     return { action: 'deny' }
   })
 
-  // Auto update
+  // Apply electron-updater
   update(win)
 }
-
-// Register IPC handlers before app is ready
-registerIpcHandlers()
 
 app.whenReady().then(createWindow)
 
@@ -119,8 +151,8 @@ ipcMain.handle('open-win', (_, arg) => {
     },
   })
 
-  if (VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
+  if (process.env.VITE_DEV_SERVER_URL) {
+    childWindow.loadURL(`${process.env.VITE_DEV_SERVER_URL}#${arg}`)
   } else {
     childWindow.loadFile(indexHtml, { hash: arg })
   }

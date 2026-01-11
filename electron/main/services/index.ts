@@ -15,6 +15,7 @@ import { archiveService, ArchiveService } from './archive.service';
 import { settingsService, SettingsService } from './settings.service';
 import { progressService, ProgressService } from './progress.service';
 import { rssService, RssService } from './rss.service';
+import { gmailService } from './gmail.service';
 
 export {
     userService, UserService,
@@ -27,6 +28,7 @@ export {
     settingsService, SettingsService,
     progressService, ProgressService,
     rssService, RssService,
+    gmailService,
 };
 
 // Re-export all services as a single object for convenience
@@ -41,4 +43,6 @@ export const services = {
     settings: settingsService,
     progress: progressService,
     rss: rssService,
+    gmail: gmailService,
 };
+

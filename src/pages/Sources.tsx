@@ -1,151 +1,202 @@
-import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Edit2, Rss, RefreshCw, ExternalLink } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { useSources } from "@/hooks/useSources";
-import { useUser } from "@/hooks/useUser";
-import { RssSourceForm } from "@/components/sources/RssSourceForm";
-import type { NewsSource } from "../../electron/main/db/schema";
+import { useState, useEffect } from 'react';
+import { useSources } from '@/hooks/useSources';
+import { useUser } from '@/hooks/useUser';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Trash2, Edit, RefreshCw, Rss, Globe, Mail } from 'lucide-react';
+import { RssSourceForm } from '@/components/sources/RssSourceForm';
+import { GmailSourceForm } from '@/components/sources/GmailSourceForm';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Sources() {
-  const [sources, setSources] = useState<NewsSource[]>([]);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<number | null>(null);
-
-  const { getSourcesByUser, toggleSourceActive, deleteSource } = useSources();
+  const { getSourcesByUser, deleteSource, toggleSourceActive, loading } = useSources();
   const { getUserById, createUser } = useUser();
-
-  // Bootstrap default user and load sources
-  const initializeApp = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Try to get user 1, create if doesn't exist
-      let user = await getUserById(1);
-      if (!user) {
-        user = await createUser({
-          openId: 'local-user',
-          name: 'Local User',
-          email: 'user@localhost',
-          loginMethod: 'local',
-          role: 'user',
-        });
-      }
-
-      if (user) {
-        setUserId(user.id);
-        const userSources = await getSourcesByUser(user.id);
-        setSources(userSources || []);
-      }
-    } catch (err) {
-      console.error('Failed to initialize:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getUserById, createUser, getSourcesByUser]);
+  const [sources, setSources] = useState<any[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [sourceToEdit, setSourceToEdit] = useState<any | null>(null);
+  const [sourceToDelete, setSourceToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     initializeApp();
-  }, [initializeApp]);
+  }, []);
 
-  const handleRefreshSources = async () => {
-    if (!userId) return;
-    setIsLoading(true);
-    try {
-      const userSources = await getSourcesByUser(userId);
-      setSources(userSources || []);
-    } finally {
-      setIsLoading(false);
+  const initializeApp = async () => {
+    // 1. Get or create default user
+    let user = await getUserById(1);
+    if (!user) {
+      console.log('Bootstrapping default user...');
+      user = await createUser({
+        openId: 'local-user',
+        name: 'Local User',
+        email: 'user@localhost',
+      });
+    }
+
+    if (user) {
+      setUserId(user.id);
+      loadSources(user.id);
     }
   };
 
-  const handleToggleActive = async (id: number, currentActive: boolean) => {
-    const updated = await toggleSourceActive(id, !currentActive);
-    if (updated) {
-      setSources(sources.map(s => s.id === id ? { ...s, isActive: !currentActive } : s));
-    }
-  };
-
-  const handleDeleteSource = async (id: number) => {
-    const success = await deleteSource(id);
-    if (success) {
-      setSources(sources.filter(s => s.id !== id));
-    }
+  const loadSources = async (uid: number) => {
+    const data = await getSourcesByUser(uid);
+    if (data) setSources(data);
   };
 
   const handleSourceAdded = () => {
     setIsAddDialogOpen(false);
-    handleRefreshSources();
+    setSourceToEdit(null);
+    if (userId) loadSources(userId);
   };
 
-  const sourceTypeLabels: Record<string, string> = {
-    rss: "RSS Feed",
-    gmail: "Gmail Newsletter",
-    youtube: "YouTube Channel",
-    website: "Website",
+  const handleEdit = (source: any) => {
+    setSourceToEdit(source);
+    setIsAddDialogOpen(true);
   };
 
-  const sourceTypeIcons: Record<string, React.ReactNode> = {
-    rss: <Rss className="w-4 h-4" />,
+  const handleDelete = async () => {
+    if (sourceToDelete) {
+      await deleteSource(sourceToDelete);
+      setSourceToDelete(null);
+      if (userId) loadSources(userId);
+    }
   };
 
-  const getSourceUrl = (source: NewsSource): string | null => {
-    const config = source.config as { url?: string } | null;
-    return config?.url || null;
+  const handleToggleActive = async (id: number, current: boolean) => {
+    await toggleSourceActive(id, !current);
+    if (userId) loadSources(userId);
   };
 
-  if (isLoading && sources.length === 0) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" />
-        <p className="mt-4 text-muted-foreground">Loading sources...</p>
-      </div>
-    );
-  }
+  const getSourceIcon = (type: string) => {
+    switch (type) {
+      case 'rss': return <Rss className="h-5 w-5 text-orange-500" />;
+      case 'gmail': return <Mail className="h-5 w-5 text-red-500" />;
+      default: return <Globe className="h-5 w-5 text-blue-500" />;
+    }
+  };
+
+  // Helper for safe JSON parsing
+  const safeJsonParse = (jsonString: string | any, fallback: any = []) => {
+    if (!jsonString) return fallback;
+    if (typeof jsonString !== 'string') return jsonString;
+    try {
+      return JSON.parse(jsonString);
+    } catch (e) {
+      console.error("JSON Parse error:", e);
+      return fallback;
+    }
+  };
+
+  const getSourceMeta = (source: any) => {
+    try {
+      const config = safeJsonParse(source.config, {});
+      if (source.type === 'rss') {
+        return config.url || 'No URL';
+      } else if (source.type === 'gmail') {
+        if (config.labelName) {
+          return `Label: ${config.labelName}`;
+        }
+        const labels = config.filters?.labels || [];
+        if (labels.length > 0) {
+          return `Label: ${labels.join(', ')}`;
+        }
+        return 'Gmail Integration';
+      }
+      return 'Unknown Source';
+    } catch (e) {
+      return 'Invalid Config';
+    }
+  };
+
+  const getSourceUrl = (source: any) => {
+    try {
+      const config = safeJsonParse(source.config, {});
+      return config.url || (source.type === 'gmail' ? 'Gmail Integration' : 'No URL');
+    } catch (e) {
+      return 'Invalid Config';
+    }
+  };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="px-8 py-6 border-b border-border flex justify-between items-center">
+    <div className="container mx-auto p-6 space-y-8">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">News Sources</h1>
-          <p className="text-muted-foreground mt-1">
-            Configure your trusted news sources ({sources.length} total)
-          </p>
+          <h1 className="text-3xl font-bold mb-2">News Sources</h1>
+          <p className="text-muted-foreground">Configure your trusted news sources ({sources.length} total)</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleRefreshSources}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button variant="outline" size="sm" onClick={() => userId && loadSources(userId)}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open) setSourceToEdit(null);
+          }}>
             <DialogTrigger asChild>
-              <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Plus className="w-5 h-5 mr-2" />
+              <Button onClick={() => setSourceToEdit(null)}>
+                <Plus className="mr-2 h-4 w-4" />
                 Add Source
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Add RSS Source</DialogTitle>
+                <DialogTitle>{sourceToEdit ? 'Edit Source' : 'Add News Source'}</DialogTitle>
                 <DialogDescription>
-                  Enter a feed URL or website to discover and add an RSS source
+                  {sourceToEdit ? 'Update configuration for this source' : 'Connect a new source to gather content'}
                 </DialogDescription>
               </DialogHeader>
+
               {userId ? (
-                <RssSourceForm
-                  userId={userId}
-                  onSuccess={handleSourceAdded}
-                  onCancel={() => setIsAddDialogOpen(false)}
-                />
+                <Tabs defaultValue={sourceToEdit?.type || "rss"} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="rss" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'rss'}>
+                      <Rss className="h-4 w-4" /> RSS Feed
+                    </TabsTrigger>
+                    <TabsTrigger value="gmail" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'gmail'}>
+                      <Mail className="h-4 w-4" /> Gmail
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <div className="mt-4">
+                    <TabsContent value="rss">
+                      <RssSourceForm
+                        userId={userId}
+                        onSuccess={handleSourceAdded}
+                        onCancel={() => {
+                          setIsAddDialogOpen(false);
+                          setSourceToEdit(null);
+                        }}
+                        initialValues={sourceToEdit}
+                      />
+                    </TabsContent>
+                    <TabsContent value="gmail">
+                      <GmailSourceForm
+                        userId={userId}
+                        onSuccess={handleSourceAdded}
+                        onCancel={() => {
+                          setIsAddDialogOpen(false);
+                          setSourceToEdit(null);
+                        }}
+                        initialValues={sourceToEdit}
+                      />
+                    </TabsContent>
+                  </div>
+                </Tabs>
               ) : (
                 <div className="py-8 text-center text-muted-foreground">
                   <p>Unable to load form. Please ensure you're running in Electron.</p>
@@ -157,110 +208,92 @@ export default function Sources() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-8">
-        {sources.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="text-muted-foreground space-y-2">
-              <Rss className="w-16 h-16 mx-auto opacity-30" />
-              <p className="text-lg font-medium">No sources configured yet</p>
-              <p className="text-sm">Add your first news source to get started</p>
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {sources.map((source) => (
-              <Card key={source.id} className={`bg-card border-border ${!source.isActive ? 'opacity-60' : ''}`}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-muted rounded-md">
-                        {sourceTypeIcons[source.type] || <Rss className="w-4 h-4" />}
-                      </div>
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          {source.name}
-                          {!source.isActive && (
-                            <Badge variant="secondary" className="text-xs">Inactive</Badge>
-                          )}
-                        </CardTitle>
-                        <CardDescription className="mt-1">
-                          {sourceTypeLabels[source.type] || source.type}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Switch
-                        checked={source.isActive}
-                        onCheckedChange={() => handleToggleActive(source.id, source.isActive)}
-                      />
-                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive/80"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Source</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{source.name}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteSource(source.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+      {sources.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <p className="text-lg">No sources configured yet</p>
+          <p className="text-sm">Add your first news source to get started</p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {sources.map((source) => (
+            <Card key={source.id} className="transition-all hover:bg-accent/5">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-background rounded-full border shadow-sm">
+                    {getSourceIcon(source.type)}
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {getSourceUrl(source) && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">URL</p>
-                      <a
-                        href={getSourceUrl(source)!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-foreground break-all hover:text-accent flex items-center gap-1"
-                      >
-                        {getSourceUrl(source)}
-                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                      </a>
+                  <div>
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      {source.name}
+                      {!source.isActive && (
+                        <Badge variant="outline" className="text-xs">Inactive</Badge>
+                      )}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="capitalize bg-muted px-2 py-0.5 rounded text-xs">
+                        {source.type}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        {getSourceMeta(source)}
+                        {source.type === 'rss' && <Globe className="h-3 w-3" />}
+                      </span>
                     </div>
-                  )}
-                  {Array.isArray(source.topics) && source.topics.length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Topics</p>
-                      <div className="flex flex-wrap gap-2">
-                        {(source.topics as string[]).map((topic: string, idx: number) => (
-                          <Badge key={idx} variant="outline">
-                            {topic}
+                    {safeJsonParse(source.topics).length > 0 && (
+                      <div className="flex gap-2 mt-2">
+                        {safeJsonParse(source.topics).map((t: string, idx: number) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {t}
                           </Badge>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={source.isActive === 1 || source.isActive === true}
+                      onCheckedChange={() => handleToggleActive(source.id, source.isActive)}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(source)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setSourceToDelete(source.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <AlertDialog open={!!sourceToDelete} onOpenChange={(open) => !open && setSourceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Source?</AlertDialogTitle>
+            <AlertDialogDescription>
+              are you sure you want to delete this news source? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
