@@ -1,8 +1,12 @@
 # NewsForge Development Plan
 
-**Project Repository**: https://github.com/geckogtmx/news-forge  
+**GitHub Repository**: https://github.com/geckogtmx/newsforge-app  
+**Local Repository**: E:\git\newsforge-app  
+**Preview URL**: https://newsforge-gbxpkwzy.manus.space/  
 **Status**: 🚧 Active Development - Core features in progress  
 **Last Updated**: 2026-01-10
+
+> **Note**: The correct GitHub repository is `newsforge-app`, not `news-forge`. The local development environment is on Windows at `E:\git\newsforge-app`. A live preview is available at the URL above.
 
 ---
 
