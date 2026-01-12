@@ -74,7 +74,7 @@ NewsForge is an AI-powered, local-first desktop application designed to streamli
 
 #### Build & Development
 - **Bundler**: Vite
-- **Package Manager**: npm
+- **Package Manager**: pnpm (switched from npm for disk efficiency)
 - **Builder**: electron-builder
 - **Testing**: Playwright (E2E) + Vitest (unit)
 
@@ -250,10 +250,16 @@ userSettings
 #### 3.3 YouTube Integration ✅ COMPLETE
 - [x] Implemented Gemini API for AI-powered video analysis
 - [x] Created YouTube service and UI components
-- [x] Integrated with Sources page
+- [x] Integrate with Sources page
 - [x] Tested with real videos
 
-#### 3.4 Research Integrations
+#### 3.4 Technical Migration: pnpm
+- [ ] Remove npm artifacts (lockfile)
+- [ ] Install pnpm
+- [ ] Reinstall dependencies
+- [ ] Verify build and test pipelies
+
+#### 3.5 Research Integrations
 - [ ] Implement ArXiv API client (fetch by category/search)
 - [ ] Implement Hugging Face Papers API integration
 - [ ] Create specialized paper summary prompt

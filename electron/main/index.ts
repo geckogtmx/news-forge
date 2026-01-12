@@ -93,7 +93,7 @@ async function createWindow() {
   })
 
   // Register all IPC handlers
-  registerIpcHandlers(ipcMain);
+  registerIpcHandlers();
 
   if (url) { // electron-vite-react:dev
     win.loadURL(url)

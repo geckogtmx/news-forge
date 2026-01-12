@@ -261,10 +261,16 @@
 - [x] Created `youtube.service.ts` for video operations
 - [x] Created `AddYoutubeVideoDialog` component
 - [x] Added YouTube tab to Sources page (informational)
-- [x] Integrated with Run workflow
-- [x] Tested with real videos
+- [x] Video playback integration
+- [x] Gemini summary extraction
 
-### 3.4 Research Integrations
+### Phase 3.4: Technical Migration: pnpm
+- [ ] Remove package-lock.json
+- [ ] Clean node_modules
+- [ ] Install dependencies with pnpm
+- [ ] Verify application stability
+
+### Phase 3.5: Research Integrations
 
 #### ArXiv Integration
 - [ ] Create `electron/main/services/arxiv.service.ts`

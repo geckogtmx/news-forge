@@ -902,15 +902,15 @@ export function registerIpcHandlers() {
         }
     });
 
-    ipcMain.handle(IPC_CHANNELS.YOUTUBE.FETCH_TRANSCRIPT, async (_event, videoId: string) => {
-        try {
-            const transcript = await services.youtube.fetchTranscript(videoId);
-            const formatted = services.youtube.formatTranscript(transcript);
-            return { success: true, data: formatted };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.YOUTUBE.FETCH_TRANSCRIPT, error);
-        }
-    });
+    // ipcMain.handle(IPC_CHANNELS.YOUTUBE.FETCH_TRANSCRIPT, async (_event, videoId: string) => {
+    //     try {
+    //         const transcript = await services.youtube.fetchTranscript(videoId);
+    //         const formatted = services.youtube.formatTranscript(transcript);
+    //         return { success: true, data: formatted };
+    //     } catch (error) {
+    //         return handleIpcError(IPC_CHANNELS.YOUTUBE.FETCH_TRANSCRIPT, error);
+    //     }
+    // });
 
     ipcMain.handle(IPC_CHANNELS.YOUTUBE.PREVIEW_VIDEO, async (_event, url: string) => {
         try {

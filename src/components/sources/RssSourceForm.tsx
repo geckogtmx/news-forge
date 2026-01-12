@@ -9,6 +9,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, AlertCircle, CheckCircle2, Search } from 'lucide-react';
 
+declare global {
+    interface Window {
+        electron: any;
+    }
+}
+
 interface RssSourceFormProps {
     userId: number;
     onSuccess?: () => void;

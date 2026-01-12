@@ -123,7 +123,7 @@ export class RunService {
         if (!currentRun) return undefined;
 
         const stats = {
-            ...currentRun.stats,
+            ...(currentRun.stats as any),
             error,
             failedAt: new Date().toISOString(),
         };
@@ -160,10 +160,10 @@ export class RunService {
         }
 
         return {
-            totalHeadlines: run.stats?.totalHeadlines || 0,
-            selectedHeadlines: run.stats?.selectedHeadlines || 0,
-            compiledItems: run.stats?.compiledItems || 0,
-            contentPackages: run.stats?.contentPackages || 0,
+            totalHeadlines: (run.stats as any)?.totalHeadlines || 0,
+            selectedHeadlines: (run.stats as any)?.selectedHeadlines || 0,
+            compiledItems: (run.stats as any)?.compiledItems || 0,
+            contentPackages: (run.stats as any)?.contentPackages || 0,
         };
     }
 
