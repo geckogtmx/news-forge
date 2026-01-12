@@ -13,6 +13,7 @@ import Settings from "./pages/Settings";
 import Compilation from "./pages/Compilation";
 import ContentPackage from "./pages/ContentPackage";
 import TestRssForm from "./pages/TestRssForm";
+import YoutubeTest from "./pages/YoutubeTest";
 
 function Router() {
   return (
@@ -54,6 +55,9 @@ function Router() {
       </Route>
       <Route path={"/test/rss"}>
         <TestRssForm />
+      </Route>
+      <Route path={"/test/youtube"}>
+        <YoutubeTest />
       </Route>
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />

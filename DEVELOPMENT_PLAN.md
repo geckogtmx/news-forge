@@ -247,19 +247,18 @@ userSettings
 - [ ] Build filter system for relevant emails
 - [ ] Add OAuth2 flow UI
 
-#### 3.3 YouTube Integration
-- [ ] Set up YouTube Data API
-- [ ] Implement channel monitoring
-- [ ] Create video metadata extraction
-- [ ] Build transcript fetching (if needed)
-- [ ] Implement API quota management
+#### 3.3 YouTube Integration ✅ COMPLETE
+- [x] Implemented Gemini API for AI-powered video analysis
+- [x] Created YouTube service and UI components
+- [x] Integrated with Sources page
+- [x] Tested with real videos
 
-#### 3.4 Website Scraping
-- [ ] Implement general web scraper
-- [ ] Create content extraction logic
-- [ ] Build anti-bot detection handling
-- [ ] Add rate limiting and politeness delays
-- [ ] Implement caching to reduce requests
+#### 3.4 Research Integrations
+- [ ] Implement ArXiv API client (fetch by category/search)
+- [ ] Implement Hugging Face Papers API integration
+- [ ] Create specialized paper summary prompt
+- [ ] Add PDF link extraction and storage
+- [ ] Build research-specific UI (abstract view, authors)
 
 ### Phase 4: AI Integration & Compilation ⏳ (Planned)
 **Timeline**: Q1 2026  

@@ -10,6 +10,28 @@ export class NewsSourceService {
      * Create a new news source
      */
     async createSource(data: Omit<InsertNewsSource, 'id' | 'createdAt' | 'updatedAt'>): Promise<NewsSource> {
+        // Duplicate check for YouTube videos
+        if (data.type === 'youtube') {
+            const config = typeof data.config === 'string' ? JSON.parse(data.config) : data.config;
+            const videoId = config.videoId;
+
+            if (videoId) {
+                const existingSources = await this.getSourcesByType(data.userId, 'youtube');
+                const isDuplicate = existingSources.some(source => {
+                    try {
+                        const sourceConfig = typeof source.config === 'string' ? JSON.parse(source.config) : source.config;
+                        return sourceConfig.videoId === videoId;
+                    } catch (e) {
+                        return false;
+                    }
+                });
+
+                if (isDuplicate) {
+                    throw new Error('This video has already been added as a source.');
+                }
+            }
+        }
+
         const result = await db.insert(newsSources).values(data).returning();
         return result[0];
     }
@@ -126,8 +148,9 @@ export class NewsSourceService {
                 if (!config.filters) errors.push('Gmail filters are required');
                 break;
             case 'youtube':
-                if (!config.channelId && !config.channelUrl) {
-                    errors.push('YouTube channel ID or URL is required');
+                // Check for either channel access (old) or specific video (new)
+                if ((!config.channelId && !config.channelUrl) && (!config.url && !config.videoId)) {
+                    errors.push('YouTube channel ID/URL OR video URL/ID is required');
                 }
                 break;
             case 'website':

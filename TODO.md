@@ -251,73 +251,41 @@
 - [x] Add Gmail source to source list UI
 - [x] Show authentication status indicator
 
-### 3.3 YouTube Integration
+### 3.3 YouTube Integration ✅ COMPLETE
 
-#### YouTube API Setup
-- [ ] Set up YouTube Data API v3
-  - [ ] Enable API in Google Cloud Console
-  - [ ] Get API key
-- [ ] Create `electron/main/services/youtube.service.ts`
-  - [ ] `getChannelInfo(channelId)` - Fetch channel details
-  - [ ] `getChannelVideos(channelId, maxResults)` - List recent videos
-  - [ ] `getVideoDetails(videoId)` - Get video metadata
-  - [ ] `searchVideos(query)` - Search for videos
-- [ ] Implement quota management
-  - [ ] Track quota usage
-  - [ ] Warn when approaching limits
-  - [ ] Cache results to reduce API calls
+> **Implementation**: Successfully integrated using Gemini API for AI-powered video analysis. Videos are added via Run page, not as persistent sources.
 
-#### YouTube Fetching Service
-- [ ] `fetchChannelUpdates(channelUrl)` - Get new videos
-- [ ] `extractHeadlines(videos)` - Convert to headline format
-  - [ ] Use video title as headline
-  - [ ] Extract description
-  - [ ] Include publish date
-  - [ ] Store video URL
-- [ ] Optional: Fetch transcripts (using third-party library)
-- [ ] Write unit tests with mocked YouTube API
+- [x] Evaluated multiple transcript extraction approaches
+- [x] Implemented Gemini API integration for metadata analysis
+- [x] Created `gemini.service.ts` for AI analysis
+- [x] Created `youtube.service.ts` for video operations
+- [x] Created `AddYoutubeVideoDialog` component
+- [x] Added YouTube tab to Sources page (informational)
+- [x] Integrated with Run workflow
+- [x] Tested with real videos
 
-#### YouTube UI Components
-- [ ] Create `src/components/sources/YoutubeSourceForm.tsx`
-  - [ ] Channel URL/ID input
-  - [ ] Channel name preview
-  - [ ] Subscriber count display
-  - [ ] Max videos to fetch setting
-  - [ ] Preview recent videos
-- [ ] Add YouTube source to source list UI
-- [ ] Show channel thumbnail
+### 3.4 Research Integrations
 
-### 3.4 Website Scraping
+#### ArXiv Integration
+- [ ] Create `electron/main/services/arxiv.service.ts`
+  - [ ] `fetchRecentPapers(category)` - Fetch from ArXiv API (e.g., cs.AI)
+  - [ ] `searchPapers(query)` - Search functionality
+  - [ ] `parseArxivResponse(xml)` - Convert Atom/XML to headlines
+  - [ ] Extract PDF links and authors
+- [ ] Create `src/components/sources/ArxivSourceForm.tsx`
+  - [ ] Category selector (cs.AI, cs.LG, etc.)
+  - [ ] Preview paper list
 
-#### General Web Scraper
-- [ ] Install `cheerio` for HTML parsing
-- [ ] Install `playwright` for dynamic content (optional)
-- [ ] Create `electron/main/services/scraper.service.ts`
-  - [ ] `fetchPage(url)` - HTTP GET with user-agent
-  - [ ] `parseContent(html, selectors)` - Extract content
-  - [ ] Support for CSS selector-based extraction
-  - [ ] Support for XPath selectors
-  - [ ] Handle JavaScript-rendered content (Playwright)
-- [ ] Implement politeness
-  - [ ] Respect robots.txt
-  - [ ] Rate limiting (max 1 req/sec per domain)
-  - [ ] Random delays between requests
-- [ ] Add caching to reduce duplicate requests
+#### Hugging Face Papers Integration
+- [ ] Create `electron/main/services/huggingface.service.ts`
+  - [ ] `fetchDailyPapers()` - Get trending papers
+  - [ ] `fetchPaperDetails(id)` - Get metadata
+- [ ] Create `src/components/sources/HFSourceForm.tsx`
+  - [ ] Simple enable/disable toggle for trending feed
 
-#### Anti-Bot Handling
-- [ ] Rotate user agents
-- [ ] Handle CAPTCHAs (notify user, can't auto-solve)
-- [ ] Detect and handle rate limiting responses
-- [ ] Implement exponential backoff on failures
-
-#### Website Scraper UI
-- [ ] Create `src/components/sources/WebsiteSourceForm.tsx`
-  - [ ] URL input
-  - [ ] CSS selector configuration
-  - [ ] Test scraping button
-  - [ ] Preview extracted content
-  - [ ] Save selector template for reuse
-- [ ] Add Website source to source list UI
+#### Source Orchestration Update
+- [ ] Update `source.service.ts` source definitions
+- [ ] Ensure non-browser fetch strategy for these APIs
 
 ### 3.5 Source Orchestration
 

@@ -871,6 +871,65 @@ export function registerIpcHandlers() {
         }
     });
 
+    // ============================================================
+    // YOUTUBE HANDLERS
+    // ============================================================
+
+    ipcMain.handle(IPC_CHANNELS.YOUTUBE.VALIDATE_URL, async (_event, url: string) => {
+        try {
+            const isValid = services.youtube.isValidYoutubeUrl(url);
+            return { success: true, data: isValid };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.YOUTUBE.VALIDATE_URL, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.YOUTUBE.EXTRACT_VIDEO_ID, async (_event, url: string) => {
+        try {
+            const videoId = services.youtube.extractVideoId(url);
+            return { success: true, data: videoId };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.YOUTUBE.EXTRACT_VIDEO_ID, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.YOUTUBE.FETCH_VIDEO, async (_event, url: string) => {
+        try {
+            const metadata = await services.youtube.fetchVideoMetadata(url);
+            return { success: true, data: metadata };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.YOUTUBE.FETCH_VIDEO, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.YOUTUBE.FETCH_TRANSCRIPT, async (_event, videoId: string) => {
+        try {
+            const transcript = await services.youtube.fetchTranscript(videoId);
+            const formatted = services.youtube.formatTranscript(transcript);
+            return { success: true, data: formatted };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.YOUTUBE.FETCH_TRANSCRIPT, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.YOUTUBE.PREVIEW_VIDEO, async (_event, url: string) => {
+        try {
+            const preview = await services.youtube.previewVideo(url);
+            return { success: true, data: preview };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.YOUTUBE.PREVIEW_VIDEO, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.YOUTUBE.EXTRACT_HEADLINE, async (_event, url: string) => {
+        try {
+            const preview = await services.youtube.previewVideo(url);
+            return { success: true, data: preview.headline };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.YOUTUBE.EXTRACT_HEADLINE, error);
+        }
+    });
+
     console.log('[IPC] All handlers registered successfully');
 }
 

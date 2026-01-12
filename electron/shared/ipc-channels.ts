@@ -142,6 +142,16 @@ export const GMAIL_CHANNELS = {
     EXTRACT_HEADLINES: 'gmail:extract-headlines',
 } as const;
 
+// YouTube channels
+export const YOUTUBE_CHANNELS = {
+    VALIDATE_URL: 'youtube:validate-url',
+    EXTRACT_VIDEO_ID: 'youtube:extract-video-id',
+    FETCH_VIDEO: 'youtube:fetch-video',
+    FETCH_TRANSCRIPT: 'youtube:fetch-transcript',
+    PREVIEW_VIDEO: 'youtube:preview-video',
+    EXTRACT_HEADLINE: 'youtube:extract-headline',
+} as const;
+
 // Combine all channels for easy access
 export const IPC_CHANNELS = {
     USER: USER_CHANNELS,
@@ -155,5 +165,6 @@ export const IPC_CHANNELS = {
     PROGRESS: PROGRESS_CHANNELS,
     RSS: RSS_CHANNELS,
     GMAIL: GMAIL_CHANNELS,
+    YOUTUBE: YOUTUBE_CHANNELS,
 } as const;
 

@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit, RefreshCw, Rss, Globe, Mail } from 'lucide-react';
+import { Plus, Trash2, Edit, RefreshCw, Rss, Globe, Mail, Youtube } from 'lucide-react';
 import { RssSourceForm } from '@/components/sources/RssSourceForm';
 import { GmailSourceForm } from '@/components/sources/GmailSourceForm';
+import { AddYoutubeVideoDialog } from '@/components/youtube/AddYoutubeVideoDialog';
+import { YoutubeSourceForm } from '@/components/sources/YoutubeSourceForm';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -85,6 +87,7 @@ export default function Sources() {
     switch (type) {
       case 'rss': return <Rss className="h-5 w-5 text-orange-500" />;
       case 'gmail': return <Mail className="h-5 w-5 text-red-500" />;
+      case 'youtube': return <Youtube className="h-5 w-5 text-red-600" />;
       default: return <Globe className="h-5 w-5 text-blue-500" />;
     }
   };
@@ -115,6 +118,8 @@ export default function Sources() {
           return `Label: ${labels.join(', ')}`;
         }
         return 'Gmail Integration';
+      } else if (source.type === 'youtube') {
+        return config.url || 'No URL';
       }
       return 'Unknown Source';
     } catch (e) {
@@ -163,12 +168,15 @@ export default function Sources() {
 
               {userId ? (
                 <Tabs defaultValue={sourceToEdit?.type || "rss"} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="rss" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'rss'}>
                       <Rss className="h-4 w-4" /> RSS Feed
                     </TabsTrigger>
                     <TabsTrigger value="gmail" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'gmail'}>
                       <Mail className="h-4 w-4" /> Gmail
+                    </TabsTrigger>
+                    <TabsTrigger value="youtube" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'youtube'}>
+                      <Youtube className="h-4 w-4" /> YouTube
                     </TabsTrigger>
                   </TabsList>
 
@@ -186,6 +194,17 @@ export default function Sources() {
                     </TabsContent>
                     <TabsContent value="gmail">
                       <GmailSourceForm
+                        userId={userId}
+                        onSuccess={handleSourceAdded}
+                        onCancel={() => {
+                          setIsAddDialogOpen(false);
+                          setSourceToEdit(null);
+                        }}
+                        initialValues={sourceToEdit}
+                      />
+                    </TabsContent>
+                    <TabsContent value="youtube">
+                      <YoutubeSourceForm
                         userId={userId}
                         onSuccess={handleSourceAdded}
                         onCancel={() => {

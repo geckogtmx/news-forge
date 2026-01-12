@@ -16,6 +16,8 @@ import { settingsService, SettingsService } from './settings.service';
 import { progressService, ProgressService } from './progress.service';
 import { rssService, RssService } from './rss.service';
 import { gmailService } from './gmail.service';
+import { youtubeService } from './youtube.service';
+import { geminiService } from './gemini.service';
 
 export {
     userService, UserService,
@@ -29,6 +31,7 @@ export {
     progressService, ProgressService,
     rssService, RssService,
     gmailService,
+    youtubeService,
 };
 
 // Re-export all services as a single object for convenience
@@ -44,5 +47,30 @@ export const services = {
     progress: progressService,
     rss: rssService,
     gmail: gmailService,
+    youtube: youtubeService,
+    gemini: geminiService,
 };
+
+/**
+ * Initialize all services
+ */
+export async function initializeServices() {
+    console.log('[Services] Initializing all services...');
+
+    // Initialize Gemini service with API key from environment
+    // Use process.env in Electron main process (import.meta.env doesn't work here)
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (geminiApiKey) {
+        try {
+            services.gemini.initialize(geminiApiKey);
+            console.log('[Services] Gemini service initialized');
+        } catch (error) {
+            console.error('[Services] Failed to initialize Gemini service:', error);
+        }
+    } else {
+        console.warn('[Services] GEMINI_API_KEY not found in environment');
+    }
+
+    console.log('[Services] All services initialized');
+}
 
