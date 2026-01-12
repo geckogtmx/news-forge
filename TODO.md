@@ -414,6 +414,149 @@ _No known issues at this time._
   - [ ] Fields: userId, model, operation, promptTokens, completionTokens, estimatedCost, timestamp
 - [ ] Implement LangChain callbacks for automatic tracking
 
+### 4.1.5 Cost Estimation & Management
+
+> **Priority**: High - Implement alongside token tracking for transparency and cost control
+
+#### Cost Estimator Service
+- [ ] Create `electron/main/services/cost-estimator.service.ts`
+  - [ ] `estimateTokens(text: string, model: string)` - Character to token estimation
+    - [ ] GPT models: ~4 chars per token
+    - [ ] Claude models: ~3.8 chars per token
+    - [ ] Add 20% buffer for safety
+  - [ ] `estimateCompilationCost(headlineCount, model)` - Compile operation estimate
+  - [ ] `estimateContentPackageCost(compilationLength, model)` - Package generation estimate
+  - [ ] `getModelPricing(model)` - Return current pricing per 1M tokens (input/output)
+  - [ ] `compareMo delCosts(operation, models[])` - Side-by-side comparison
+  - [ ] Pricing data structure (periodically updated)
+    ```typescript
+    {
+      'claude-3.5-sonnet': { input: 3.00, output: 15.00 },
+      'gpt-4o': { input: 2.50, output: 10.00 },
+      'gpt-4o-mini': { input: 0.15, output: 0.60 }
+    }
+    ```
+
+#### Pre-Operation Cost Preview UI
+- [ ] Create `src/components/ai/CostEstimateDialog.tsx`
+  - [ ] Show operation description ("Compile 25 headlines")
+  - [ ] Display estimated tokens (prompt + completion)
+  - [ ] Display estimated cost with model name
+  - [ ] Model switcher dropdown with real-time cost updates
+  - [ ] Approve/Cancel buttons
+  - [ ] "Don't ask again under $X" checkbox
+- [ ] Create `src/components/ai/ModelComparisonWidget.tsx`
+  - [ ] Table: Model | Quality | Speed | Cost | Recommendation
+  - [ ] Highlight recommended model based on operation type
+  - [ ] Visual indicator (★★★★★) for quality vs cost trade-off
+- [ ] Integrate into compilation flow
+  - [ ] Show before `generateCompilation()` call
+  - [ ] Allow model selection from preview
+  - [ ] Remember user preference per operation type
+
+#### Smart Budget Controls
+- [ ] Add budget settings to user preferences
+  - [ ] Daily budget limit (default: $5)
+  - [ ] Weekly budget limit (default: $20)
+  - [ ] Monthly budget limit (default: $50)
+  - [ ] Auto-approve threshold (default: $0.10)
+  - [ ] Hard limit threshold (default: $1.00 per operation)
+- [ ] Create `src/components/settings/BudgetSettings.tsx`
+  - [ ] Budget limit inputs with currency formatting
+  - [ ] Reset schedule (daily/weekly/monthly)
+  - [ ] Current spend vs limit progress bars
+  - [ ] Budget history chart
+- [ ] Implement budget checking logic
+  - [ ] Check before every AI operation
+  - [ ] Show warning at 75% of daily/weekly/monthly limit
+  - [ ] Block operations when hard limit reached
+  - [ ] Suggest cheaper alternatives when near limit
+- [ ] Budget approval workflow
+  - [ ] Auto-approve if cost < auto-approve threshold
+  - [ ] Show confirmation dialog if cost > threshold
+  - [ ] Display cheaper model alternatives in confirmation
+  - [ ] Allow one-time budget override
+
+#### Cost Optimization Suggestions
+- [ ] Batch operation optimizer
+  - [ ] Detect when user is compiling headlines one-by-one
+  - [ ] Suggest batching: "Compile 5 more to save ~$0.08"
+  - [ ] Calculate optimal batch size per model
+  - [ ] Show efficiency gains in percentage
+- [ ] Cache intelligence
+  - [ ] Before compilation, check for similar previous compilations
+  - [ ] Show cache hit prediction: "70% similar to previous → ~$0.05 cheaper"
+  - [ ] Option to reuse cached compilation
+  - [ ] Display cache hit rate in analytics
+- [ ] Model routing suggestions
+  - [ ] Analyze operation complexity (headline count, length)
+  - [ ] Suggest GPT-4o-mini for simple compilations (< 10 headlines)
+  - [ ] Suggest Claude Sonnet only for complex tasks (> 30 headlines)
+  - [ ] Show cost difference: "Switch to GPT-4o-mini and save $0.09"
+
+#### Cost Analytics Dashboard
+- [ ] Create `src/pages/CostAnalyticsPage.tsx`
+  - [ ] Time period selector (Last 7 days, 30 days, All time)
+  - [ ] Total spend display (large, prominent)
+  - [ ] Spend trend chart (line chart, daily granularity)
+  - [ ] Cost by operation type (pie chart)
+    - [ ] Compilation costs
+    - [ ] Content package costs
+    - [ ] Other AI operations
+  - [ ] Cost by model (bar chart)
+    - [ ] Claude Sonnet usage
+    - [ ] GPT-4o usage
+    - [ ] GPT-4o-mini usage
+  - [ ] Efficiency metrics cards
+    - [ ] Average cost per compilation
+    - [ ] Average cost per content package
+    - [ ] Token efficiency (tokens per dollar)
+  - [ ] Savings metrics cards
+    - [ ] Total saved via caching (vs. no cache)
+    - [ ] Savings from model optimization (vs. all Claude Sonnet)
+    - [ ] Cache hit rate percentage
+- [ ] Create IPC channels for analytics
+  - [ ] `cost:get-analytics` - Fetch analytics data
+  - [ ] `cost:get-daily-spend` - Current day spend
+  - [ ] `cost:get-budget-status` - Budget utilization
+
+#### Budget Alerts & Notifications
+- [ ] Implement alert service
+  - [ ] Check budget status after each operation
+  - [ ] Emit alerts at 50%, 75%, 90%, 100% of limits
+  - [ ] Deduplicate alerts (don't spam)
+- [ ] Toast notifications
+  - [ ] Warning toast at 75%: "You've used 75% of your daily budget ($3.75/$5)"
+  - [ ] Critical toast at 90%: "Approaching daily limit! $4.50/$5 used"
+  - [ ] Error toast at 100%: "Daily limit reached. Operations paused."
+- [ ] Daily spend summary (optional)
+  - [ ] In-app notification at end of day
+  - [ ] Show total spend, operations count, savings
+  - [ ] Compare to previous day
+  - [ ] Suggest optimizations for next day
+- [ ] Weekly cost reports
+  - [ ] Aggregate weekly stats
+  - [ ] Show trends (up/down from last week)
+  - [ ] Top costly operations
+  - [ ] Recommendations for next week
+- [ ] Anomaly detection
+  - [ ] Track average daily spend
+  - [ ] Alert if day's spend > 2x average
+  - [ ] Suggest investigation or budget adjustment
+
+#### Database Schema Updates
+- [ ] Add budget tracking to `userSettings`
+  - [ ] `dailyBudgetLimit: number`
+  - [ ] `weeklyBudgetLimit: number`
+  - [ ] `monthlyBudgetLimit: number`
+  - [ ] `autoApproveThreshold: number`
+  - [ ] `hardLimitThreshold: number`
+- [ ] Enhance `tokenUsage` table
+  - [ ] Add `estimatedCost` field (pre-operation estimate)
+  - [ ] Add `actualCost` field (post-operation actual)
+  - [ ] Add `wasCached` boolean field
+  - [ ] Add `wasOptimized` boolean field (if cheaper model suggested and used)
+
 ### 4.2 News Compilation
 
 #### Headline Grouping Algorithm

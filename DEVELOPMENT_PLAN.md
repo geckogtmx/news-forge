@@ -317,6 +317,66 @@ Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a
 - [ ] Build cost analytics dashboard
 - [ ] Implement tiered model strategy
 
+#### 4.1.5 Cost Estimation & Management
+> **High Priority**: Implement alongside token tracking for full cost transparency
+
+**Upfront Cost Estimation**:
+- [ ] Create `cost-estimator.service.ts`
+  - [ ] Estimate compilation costs based on headline count and model
+  - [ ] Estimate content package costs based on input length
+  - [ ] Token estimation algorithm (chars → tokens with 20% buffer)
+  - [ ] Dynamic pricing lookup (periodically refresh model prices)
+  - [ ] Cost breakdown by operation type
+
+**Pre-Operation Cost Preview**:
+- [ ] Show cost estimates in confirmation dialogs
+  - [ ] "Compile 25 headlines → Est. $0.12 (Claude)" with model switcher
+  - [ ] Real-time cost updates as user adjusts parameters
+  - [ ] Display token estimates alongside cost
+- [ ] Model comparison widget
+  - [ ] Side-by-side cost comparison (Claude vs GPT-4o vs GPT-4o-mini)
+  - [ ] Quality vs cost trade-off indicator
+  - [ ] Recommendation based on operation type
+
+**Smart Budget Controls**:
+- [ ] User-configurable budget limits (daily/weekly/monthly)
+- [ ] Soft limits (warnings) and hard limits (blocking)
+- [ ] Budget approval workflow for high-cost operations
+  - [ ] Auto-approve under threshold (e.g., $0.10)
+  - [ ] Require confirmation for operations > $0.50
+  - [ ] Suggest cheaper alternatives when near limit
+- [ ] Budget reset notifications and summaries
+
+**Cost Optimization Suggestions**:
+- [ ] Batch operation recommendations
+  - [ ] "Compile 10 more headlines to maximize efficiency"
+  - [ ] Suggest optimal batch sizes for each model
+- [ ] Cache hit predictions
+  - [ ] Show "~30% cheaper due to cached content"
+  - [ ] Highlight opportunities to reuse previous compilations
+- [ ] Model routing intelligence
+  - [ ] Auto-suggest GPT-4o-mini for simple tasks
+  - [ ] Flag when Claude Sonnet is overkill
+
+**Cost Analytics Dashboard**:
+- [ ] Real-time spending charts (daily/weekly/monthly trends)
+- [ ] Cost by operation type breakdown (pie chart)
+- [ ] Cost by model comparison (bar chart)
+- [ ] Savings metrics
+  - [ ] Total saved via caching
+  - [ ] Savings from model optimization
+  - [ ] Comparison to "all Claude Sonnet" baseline
+- [ ] Efficiency metrics
+  - [ ] Cost per headline compiled
+  - [ ] Cost per content package generated
+  - [ ] ROI indicators
+
+**Budget Alerts & Notifications**:
+- [ ] Toast notifications at 50%, 75%, 90%, 100% of budget
+- [ ] Daily spend summary (optional email/in-app)
+- [ ] Weekly cost reports with trends and recommendations
+- [ ] Anomaly detection (spending spike alerts)
+
 #### 4.2 News Compilation
 - [ ] Develop headline grouping algorithm
 - [ ] Implement semantic similarity analysis
