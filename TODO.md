@@ -8,18 +8,9 @@
 
 ---
 
-## ⚠️ KNOWN ISSUES (Needs Investigation in New Thread)
+## ⚠️ KNOWN ISSUES
 
-### RSS Feed Fetch Failing
-**Status**: BLOCKED  
-**Error**: `"Failed to fetch feed"` when attempting to add RSS sources in UI  
-**Context**:
-- Frontend (`RssSourceForm.tsx`) correctly calls `window.electron.ipcRenderer.invoke('rss:fetch-feed', url)`
-- IPC channel name verified correct in `ipc-channels.ts`
-- Backend service (`rss.service.ts`) rewritten to use Electron's `net.request` instead of `fetch`
-- IPC handlers were reverted after accidental duplication crash
-- **Root Cause Unknown**: Handler may not be registered, or service may have runtime error
-- **Next Steps**: In fresh thread, verify RSS IPC handler exists in `electron/main/ipc/handlers.ts` and debug actual error from backend
+_No known issues at this time._
 
 ---
 
@@ -1091,3 +1082,302 @@
 
 **Last Updated**: 2026-01-10  
 **Next Review**: 2026-01-24
+## 🎨 Phase 11: UI/UX Optimization & Polish
+
+### 11.1 Visual Polish & Design Consistency
+
+#### Spacing & Layout Audit
+- [ ] Conduct comprehensive spacing audit
+  - [ ] Document current spacing inconsistencies
+  - [ ] Define spacing scale (e.g., 4px, 8px, 12px, 16px, 24px, 32px, 48px)
+  - [ ] Apply spacing scale systematically across all components
+  - [ ] Verify consistent margins and padding
+- [ ] Reduce excessive padding
+  - [x] Optimize source card padding (p-6 → p-4)
+  - [ ] Review and optimize all card components
+  - [ ] Review dialog padding
+  - [ ] Review page container padding
+
+#### Color & Typography
+- [ ] Color consistency audit
+  - [ ] Document all colors used in app
+  - [ ] Ensure colors match design system
+  - [ ] Verify semantic color usage (success, error, warning, info)
+  - [ ] Test color contrast for accessibility
+- [ ] Typography hierarchy
+  - [ ] Standardize heading sizes (h1-h6)
+  - [ ] Ensure consistent body text sizing
+  - [ ] Verify line heights for readability
+  - [ ] Standardize font weights
+
+#### Component Refinement
+- [ ] Button consistency
+  - [ ] Audit all button variants
+  - [ ] Standardize button sizes (sm, md, lg)
+  - [ ] Ensure consistent icon sizing in buttons
+  - [ ] Verify hover/active/disabled states
+- [ ] Icon consistency
+  - [ ] Audit icon library usage
+  - [ ] Standardize icon sizes
+  - [ ] Ensure semantic icon usage
+  - [ ] Add missing icons where needed
+
+#### Micro-interactions
+- [ ] Hover states
+  - [ ] Add smooth transitions (200-300ms) to all interactive elements
+  - [ ] Implement scale or color shift on hover
+  - [ ] Test cursor changes (pointer, default, etc.)
+- [ ] Loading states
+  - [ ] Design and implement skeleton loaders
+  - [ ] Add spinner components for async operations
+  - [ ] Implement progress bars for long operations
+- [ ] State feedback
+  - [ ] Success animations (checkmarks, green flash)
+  - [ ] Error shake animations
+  - [ ] Form validation feedback
+  - [ ] Toast notification animations
+
+### 11.2 Accessibility (a11y)
+
+#### Keyboard Navigation
+- [ ] Full keyboard support
+  - [ ] Ensure Tab navigation works throughout app
+  - [ ] Implement Shift+Tab for reverse navigation
+  - [ ] Add visible focus outlines (ring-2 ring-primary)
+  - [ ] Test logical tab order on all pages
+- [ ] Keyboard shortcuts
+  - [ ] Implement Ctrl+N (new run)
+  - [ ] Implement Ctrl+K (search/command palette)
+  - [ ] Implement Ctrl+S (save)
+  - [ ] Implement Ctrl+, (settings)
+  - [ ] Implement Esc (close dialogs)
+  - [ ] Document shortcuts in help modal
+
+#### Screen Reader Support
+- [ ] ARIA labels
+  - [ ] Add aria-label to all buttons without text
+  - [ ] Add aria-describedby for form hints
+  - [ ] Add role attributes (navigation, main, complementary)
+  - [ ] Add aria-live regions for dynamic content
+- [ ] Semantic HTML
+  - [ ] Use proper heading hierarchy
+  - [ ] Use semantic elements (nav, main, aside, footer)
+  - [ ] Use button for actions, a for links
+- [ ] Screen reader testing
+  - [ ] Test with NVDA (Windows)
+  - [ ] Test with JAWS (Windows)
+  - [ ] Document accessibility features
+
+#### Color & Contrast
+- [ ] WCAG compliance
+  - [ ] Test all text against background (4.5:1 ratio minimum)
+  - [ ] Fix low-contrast issues
+  - [ ] Test in grayscale mode
+  - [ ] Ensure state is not conveyed by color alone
+- [ ] Focus indicators
+  - [ ] Ensure visible focus rings
+  - [ ] Test focus visibility in light and dark modes
+
+#### Motion Preferences
+- [ ] Respect user preferences
+  - [ ] Implement prefers-reduced-motion media query
+  - [ ] Provide static alternatives to animations
+  - [ ] Test with motion disabled
+
+### 11.3 Responsive Design & Layout
+
+#### Window Resizing
+- [ ] Test minimum window sizes
+  - [ ] Define minimum usable width (e.g., 640px)
+  - [ ] Define minimum usable height (e.g., 480px)
+  - [ ] Implement responsive breakpoints
+  - [ ] Test on small laptop screens (1366x768)
+- [ ] Test maximum window sizes
+  - [ ] Test on 4K displays (3840x2160)
+  - [ ] Test ultra-wide monitors
+  - [ ] Ensure layouts don't break with excessive white space
+- [ ] Adaptive layouts
+  - [ ] Implement responsive grids
+  - [ ] Collapse sidebars on smaller screens
+  - [ ] Stack elements vertically on narrow windows
+
+#### Content Density
+- [ ] View mode options
+  - [ ] Implement compact view
+  - [ ] Implement comfortable view (default)
+  - [ ] Implement spacious view
+  - [ ] Persist user preference in settings
+- [ ] Optimize for common screen sizes
+  - [ ] 1920x1080 (Full HD)
+  - [ ] 1366x768 (common laptop)
+  - [ ] 2560x1440 (2K)
+  - [ ] 3840x2160 (4K)
+
+### 11.4 Performance & Perceived Performance
+
+#### Loading States
+- [ ] Skeleton screens
+  - [ ] Design skeleton for source cards
+  - [ ] Design skeleton for headlines table
+  - [ ] Design skeleton for compilations list
+  - [ ] Implement skeleton component library
+- [ ] Progress indicators
+  - [ ] Progress bar for run execution
+  - [ ] Progress spinner for IPC calls
+  - [ ] Determinate progress where possible
+- [ ] Optimistic UI
+  - [ ] Immediately reflect toggles (source active/inactive)
+  - [ ] Show new items before server confirmation
+  - [ ] Rollback on error
+
+#### Instant Feedback
+- [ ] Response time optimization
+  - [ ] Ensure UI updates within 100ms of user action
+  - [ ] Debounce search inputs (300ms)
+  - [ ] Throttle scroll handlers
+- [ ] Prevent double-actions
+  - [ ] Disable buttons during async operations
+  - [ ] Show loading state on buttons
+  - [ ] Prevent double-form submission
+
+#### Visual Stability
+- [ ] Eliminate layout shifts
+  - [ ] Reserve space for loading content
+  - [ ] Use min-height for dynamic content areas
+  - [ ] Avoid layout changes after mount
+- [ ] Optimize re-renders
+  - [ ] Wrap expensive components with React.memo
+  - [ ] Use useMemo for heavy calculations
+  - [ ] Use useCallback for stable function references
+
+### 11.5 Information Architecture
+
+#### Navigation Simplification
+- [ ] Reduce clicks to common actions
+  - [ ] Add quick actions to dashboard
+  - [ ] Implement contextual menus
+  - [ ] Add breadcrumbs for deep navigation
+- [ ] Improve page clarity
+  - [ ] Clear page titles
+  - [ ] Descriptive section headings
+  - [ ] Helpful tooltips on complex features
+
+#### Data Presentation
+- [ ] Table optimization
+  - [ ] Optimize column widths
+  - [ ] Add sortable columns
+  - [ ] Implement column visibility toggles
+  - [ ] Add horizontal scroll for wide tables
+- [ ] Empty states
+  - [ ] Design helpful empty states with illustrations
+  - [ ] Add CTAs in empty states (e.g., "Add your first source")
+  - [ ] Provide context on what the user should do
+- [ ] Progressive disclosure
+  - [ ] Collapse advanced options by default
+  - [ ] Use accordion for long forms
+  - [ ] Show/hide details on demand
+- [ ] Smart defaults
+  - [ ] Pre-fill forms with sensible defaults
+  - [ ] Auto-populate fields from metadata (e.g., RSS topic tags)
+  - [ ] Remember user preferences
+
+### 11.6 User Feedback & Error Handling
+
+#### Error Messages
+- [ ] User-friendly errors
+  - [ ] Rewrite technical errors in plain language
+  - [ ] Provide actionable solutions (e.g., "Check your API key")
+  - [ ] Show errors with appropriate severity (error/warning/info)
+- [ ] Error UI states
+  - [ ] Design error state for forms
+  - [ ] Design error state for pages (failure to load)
+  - [ ] Design error state for components
+
+#### Success Confirmation
+- [ ] Toast notifications
+  - [ ] Implement toast notification system
+  - [ ] Success toasts (green, checkmark icon)
+  - [ ] Error toasts (red, X icon)
+  - [ ] Info toasts (blue, info icon)
+  - [ ] Auto-dismiss after 4 seconds
+- [ ] Visual feedback
+  - [ ] Flash green on successful save
+  - [ ] Show checkmark icon on success
+  - [ ] Update list immediately after action
+- [ ] Undo functionality
+  - [ ] Implement undo for delete operations
+  - [ ] Show undo button in toast
+  - [ ] 5-second window to undo
+
+#### Form Validation
+- [ ] Real-time validation
+  - [ ] Validate on blur (not on every keystroke)
+  - [ ] Show validation errors inline
+  - [ ] Clear errors when fixed
+- [ ] Validation messages
+  - [ ] Clear, specific error messages
+  - [ ] Explain what's wrong and how to fix it
+  - [ ] Highlight invalid fields
+- [ ] Focus management
+  - [ ] Auto-focus first error field on submit
+  - [ ] Scroll to error field if not visible
+
+### 11.7 Dark Mode Refinement
+
+#### Color Audit
+- [ ] Dark mode contrast
+  - [ ] Test all text colors in dark mode
+  - [ ] Ensure proper contrast (4.5:1 minimum)
+  - [ ] Adjust grays to reduce eye strain
+  - [ ] Test in low-light environment
+- [ ] Component testing
+  - [ ] Test all pages in dark mode
+  - [ ] Test all dialogs in dark mode
+  - [ ] Test all forms in dark mode
+  - [ ] Fix any dark mode bugs
+
+#### Assets & Icons
+- [ ] Icon adjustments
+  - [ ] Ensure icons are visible in dark mode
+  - [ ] Adjust icon colors if needed
+- [ ] Image handling
+  - [ ] Test images in dark mode
+  - [ ] Add borders to images if needed for contrast
+
+#### Theme Transition
+- [ ] Smooth theme switching
+  - [ ] Add CSS transition for theme change
+  - [ ] Prevent flash of wrong theme
+  - [ ] Persist theme preference
+
+### 11.8 User Testing & Iteration
+
+#### Usability Testing
+- [ ] Recruit testers
+  - [ ] Find 5-10 representative users
+  - [ ] Include users with varying technical levels
+  - [ ] Include users with accessibility needs
+- [ ] Conduct tests
+  - [ ] Create test scenarios (add source, run compilation, etc.)
+  - [ ] Observe users completing tasks
+  - [ ] Record pain points and confusion
+  - [ ] Note positive feedback
+- [ ] Document findings
+  - [ ] Write usability test report
+  - [ ] Prioritize issues by severity
+  - [ ] Create action items
+
+#### Feedback Implementation
+- [ ] Address critical issues first
+  - [ ] Fix blocking usability problems
+  - [ ] Improve confusing workflows
+  - [ ] Clarify unclear UI elements
+- [ ] Iterate on design
+  - [ ] Implement design improvements
+  - [ ] Re-test problematic areas
+  - [ ] Validate improvements with users
+- [ ] A/B testing (if needed)
+  - [ ] Test alternative designs for critical features
+  - [ ] Measure user preference/success rate
+  - [ ] Choose best performing design
+

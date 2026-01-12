@@ -65,24 +65,77 @@ export function RssSourceForm({ userId, onSuccess, onCancel, initialValues }: Rs
         setIsLoading(true);
         setError(null);
         try {
-            // Use window.electron directly as before
-            const items = await window.electron.ipcRenderer.invoke('rss:fetch-feed', url);
-            if (items && items.length > 0) {
-                setPreview({
-                    title: items[0].title || 'Feed Preview',
-                    description: items[0].contentSnippet?.substring(0, 100) + '...'
+            console.log('[RSS Form] Fetching feed:', url);
+            // Invoke IPC handler - returns { success: true, data: feed } or { success: false, error: string }
+            const response = await window.ipcRenderer.invoke('rss:fetch-feed', url);
+
+            console.log('[RSS Form] Response received:', response);
+
+            if (!response) {
+                setError('No response from server');
+                return;
+            }
+
+            if (!response.success) {
+                setError(response.error || 'Failed to fetch feed');
+                return;
+            }
+
+            const feed = response.data;
+            console.log('[RSS Form] Feed data:', feed);
+
+            if (!feed) {
+                setError('No feed data in response');
+                return;
+            }
+
+            if (!feed.items || !Array.isArray(feed.items)) {
+                setError('Invalid feed structure - missing items array');
+                return;
+            }
+
+            if (feed.items.length === 0) {
+                setError('No items found in feed');
+                return;
+            }
+
+            const firstItem = feed.items[0];
+            console.log('[RSS Form] First item:', firstItem);
+
+            setPreview({
+                title: firstItem?.title || 'Feed Preview',
+                description: firstItem?.contentSnippet?.substring(0, 100) + '...' || ''
+            });
+
+            // Auto-fill name if empty using feed title
+            if (!name && !initialValues && feed.title) {
+                setName(feed.title);
+            }
+
+            // Auto-populate topics from feed categories if topics field is empty
+            if (!topics && !initialValues) {
+                const extractedTopics = new Set<string>();
+
+                // Try to get categories from feed level
+                if (feed.categories && Array.isArray(feed.categories)) {
+                    feed.categories.forEach((cat: string) => extractedTopics.add(cat));
+                }
+
+                // Also check first few items for categories
+                feed.items.slice(0, 5).forEach((item: any) => {
+                    if (item.categories && Array.isArray(item.categories)) {
+                        item.categories.forEach((cat: string) => extractedTopics.add(cat));
+                    }
                 });
 
-                // Auto-fill name if empty and we have a title from feed but only for new sources
-                if (!name && !initialValues) {
-                    // We could parse feed title here if we had it from the 'rss:fetch' result more cleanly
-                    // For now user sets name
+                // Set topics if we found any
+                if (extractedTopics.size > 0) {
+                    setTopics(Array.from(extractedTopics).slice(0, 5).join(', '));
                 }
-            } else {
-                setError('No items found or invalid feed');
             }
-        } catch (err) {
-            setError('Failed to fetch feed. Please check the URL.');
+        } catch (err: any) {
+            console.error('[RSS Form] Error:', err);
+            setError(err?.message || 'Failed to fetch feed. Please check the URL.');
         } finally {
             setIsLoading(false);
         }

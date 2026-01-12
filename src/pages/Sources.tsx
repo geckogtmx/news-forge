@@ -274,13 +274,13 @@ export default function Sources() {
         <div className="grid gap-4">
           {sources.map((source) => (
             <Card key={source.id} className="transition-all hover:bg-accent/5">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-background rounded-full border shadow-sm">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-background rounded-full border shadow-sm">
                     {getSourceIcon(source.type)}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <h3 className="font-semibold text-base flex items-center gap-2">
                       {source.name}
                       {!source.isActive && (
                         <Badge variant="outline" className="text-xs">Inactive</Badge>
@@ -297,7 +297,7 @@ export default function Sources() {
                       </span>
                     </div>
                     {safeJsonParse(source.topics).length > 0 && (
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-1.5 mt-1">
                         {safeJsonParse(source.topics).map((t: string, idx: number) => (
                           <Badge key={idx} variant="secondary" className="text-xs">
                             {t}
@@ -308,7 +308,7 @@ export default function Sources() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={source.isActive === 1 || source.isActive === true}
