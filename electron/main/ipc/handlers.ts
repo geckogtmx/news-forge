@@ -930,6 +930,19 @@ export function registerIpcHandlers() {
         }
     });
 
+    // ============================================================
+    // FETCH COORDINATOR HANDLERS
+    // ============================================================
+
+    ipcMain.handle(IPC_CHANNELS.FETCH.RUN_ALL_SOURCES, async (_event, userId: number) => {
+        try {
+            const result = await services.fetchCoordinator.runFetchForAllSources(userId);
+            return { success: true, data: result };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.FETCH.RUN_ALL_SOURCES, error);
+        }
+    });
+
     console.log('[IPC] All handlers registered successfully');
 }
 

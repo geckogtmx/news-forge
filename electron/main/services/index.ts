@@ -20,6 +20,7 @@ import { youtubeService } from './youtube.service';
 import { geminiService } from './gemini.service';
 import { arxivService } from './arxiv.service';
 import { huggingFaceService } from './huggingface.service';
+import { fetchCoordinatorService, FetchCoordinatorService } from './fetch-coordinator.service';
 
 export {
     userService, UserService,
@@ -35,6 +36,7 @@ export {
     youtubeService,
     arxivService,
     huggingFaceService,
+    fetchCoordinatorService, FetchCoordinatorService,
 };
 
 // Re-export all services as a single object for convenience
@@ -54,6 +56,7 @@ export const services = {
     gemini: geminiService,
     arxiv: arxivService,
     huggingFace: huggingFaceService,
+    fetchCoordinator: fetchCoordinatorService,
 };
 
 /**

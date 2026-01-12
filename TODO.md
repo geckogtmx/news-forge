@@ -299,16 +299,19 @@ _No known issues at this time._
 - [x] Update `source.service.ts` source definitions
 - [x] Ensure non-browser fetch strategy for these APIs
 
-### 3.6 Source Orchestration
+### 3.6 Source Orchestration ✅ COMPLETE
 
 #### Fetch Coordinator
-- [ ] Create `electron/main/services/fetch-coordinator.service.ts`
-  - [ ] `runFetchForAllSources(userId)` - Start a run
-  - [ ] Fetch from all active sources in parallel
-  - [ ] Aggregate headlines from all sources
-  - [ ] Save headlines to database
-  - [ ] Emit progress events
-  - [ ] Handle partial failures gracefully
+- [x] Create `electron/main/services/fetch-coordinator.service.ts`
+  - [x] `runFetchForAllSources(userId)` - Start a run
+  - [x] Fetch from all active sources in parallel
+  - [x] Aggregate headlines from all sources
+  - [x] Save headlines to database
+  - [x] Emit progress events
+  - [x] Handle partial failures gracefully
+- [x] Add IPC channels for fetch coordinator
+- [x] Register IPC handlers
+- [x] Export service in services index
 - [ ] Write integration tests for fetch coordinator
 
 ### 3.7 GitHub Awesome Lists Integration
