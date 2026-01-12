@@ -259,12 +259,52 @@ userSettings
 - [ ] Reinstall dependencies
 - [ ] Verify build and test pipelies
 
-#### 3.5 Research Integrations
-- [ ] Implement ArXiv API client (fetch by category/search)
-- [ ] Implement Hugging Face Papers API integration
-- [ ] Create specialized paper summary prompt
-- [ ] Add PDF link extraction and storage
-- [ ] Build research-specific UI (abstract view, authors)
+#### 3.5 Research Integrations ✅ COMPLETE
+- [x] Implement ArXiv API client (fetch by category/search)
+- [x] Implement Hugging Face Papers API integration
+- [x] Create specialized paper summary prompt
+- [x] Add PDF link extraction and storage
+- [x] Build research-specific UI (abstract view, authors)
+
+#### 3.6 Source Orchestration
+- [ ] Create fetch coordinator service
+- [ ] Implement parallel source fetching
+- [ ] Aggregate headlines from all sources
+- [ ] Handle partial failures gracefully
+- [ ] Add progress event tracking
+
+#### 3.7 GitHub Awesome Lists Integration
+> **Note**: Implement after Source Orchestration (3.6) is complete
+
+Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a news source.
+
+**Approach**: Monitor commits to awesome list repositories and extract new tool/resource additions as headlines.
+
+**Key Features**:
+- Fetch recent commits via GitHub API
+- Parse markdown diffs to identify new entries
+- Extract tool name, description, URL, and category
+- Alternative: Periodic full README parsing with diff comparison
+- Support multiple awesome lists simultaneously
+
+**Configuration**:
+```json
+{
+  "type": "github-awesome",
+  "config": {
+    "repo": "mahseema/awesome-ai-tools",
+    "categories": ["all"],
+    "checkFrequency": "daily"
+  }
+}
+```
+
+**Implementation Tasks**:
+- [ ] GitHub API integration (commits, file contents)
+- [ ] Markdown parsing (remark/markdown-it)
+- [ ] Diff extraction for new tools
+- [ ] UI form for repository configuration
+- [ ] Rate limiting and caching
 
 ### Phase 4: AI Integration & Compilation ⏳ (Planned)
 **Timeline**: Q1 2026  

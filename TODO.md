@@ -276,28 +276,28 @@ _No known issues at this time._
 - [x] Install dependencies with pnpm
 - [x] Verify application stability
 
-### Phase 3.5: Research Integrations
+### Phase 3.5: Research Integrations ✅ COMPLETE
 
 #### ArXiv Integration
-- [ ] Create `electron/main/services/arxiv.service.ts`
-  - [ ] `fetchRecentPapers(category)` - Fetch from ArXiv API (e.g., cs.AI)
-  - [ ] `searchPapers(query)` - Search functionality
-  - [ ] `parseArxivResponse(xml)` - Convert Atom/XML to headlines
-  - [ ] Extract PDF links and authors
-- [ ] Create `src/components/sources/ArxivSourceForm.tsx`
-  - [ ] Category selector (cs.AI, cs.LG, etc.)
-  - [ ] Preview paper list
+- [x] Create `electron/main/services/arxiv.service.ts`
+  - [x] `fetchRecentPapers(category)` - Fetch from ArXiv API (e.g., cs.AI)
+  - [x] `searchPapers(query)` - Search functionality
+  - [x] `parseArxivResponse(xml)` - Convert Atom/XML to headlines
+  - [x] Extract PDF links and authors
+- [x] Create `src/components/sources/ArxivSourceForm.tsx`
+  - [x] Category selector (cs.AI, cs.LG, etc.)
+  - [x] Preview paper list
 
 #### Hugging Face Papers Integration
-- [ ] Create `electron/main/services/huggingface.service.ts`
-  - [ ] `fetchDailyPapers()` - Get trending papers
-  - [ ] `fetchPaperDetails(id)` - Get metadata
-- [ ] Create `src/components/sources/HFSourceForm.tsx`
-  - [ ] Simple enable/disable toggle for trending feed
+- [x] Create `electron/main/services/huggingface.service.ts`
+  - [x] `fetchDailyPapers()` - Get trending papers
+  - [x] `fetchPaperDetails(id)` - Get metadata
+- [x] Create `src/components/sources/HFSourceForm.tsx`
+  - [x] Simple enable/disable toggle for trending feed
 
 #### Source Orchestration Update
-- [ ] Update `source.service.ts` source definitions
-- [ ] Ensure non-browser fetch strategy for these APIs
+- [x] Update `source.service.ts` source definitions
+- [x] Ensure non-browser fetch strategy for these APIs
 
 ### 3.6 Source Orchestration
 
@@ -310,6 +310,71 @@ _No known issues at this time._
   - [ ] Emit progress events
   - [ ] Handle partial failures gracefully
 - [ ] Write integration tests for fetch coordinator
+
+### 3.7 GitHub Awesome Lists Integration
+
+> **Priority**: Implement after Source Orchestration (3.6) is complete
+
+#### GitHub Service
+- [ ] Create `electron/main/services/github-awesome.service.ts`
+  - [ ] `fetchRecentCommits(repo, since)` - Get commits since last check
+  - [ ] `parseCommitDiffs(commits)` - Extract file changes from diffs
+  - [ ] `extractNewTools(diffs)` - Parse markdown additions for new tools
+  - [ ] `validateToolEntry(entry)` - Ensure entry has name, description, URL
+  - [ ] Handle GitHub API authentication and rate limiting
+- [ ] Alternative: Simple polling approach
+  - [ ] `fetchMarkdownFile(repo)` - Get raw README
+  - [ ] `parseAwesomeList(markdown)` - Extract all tools
+  - [ ] `compareWithPrevious(current, previous)` - Find new entries
+  - [ ] Store file hash to detect changes
+
+#### GitHub Awesome UI
+- [ ] Create `src/components/sources/GitHubAwesomeSourceForm.tsx`
+  - [ ] Repository input (e.g., `mahseema/awesome-ai-tools`)
+  - [ ] Validate repository exists via GitHub API
+  - [ ] Preview recent additions
+  - [ ] Auto-populate topics from README categories
+  - [ ] Check frequency selector (daily/weekly)
+- [ ] Add GitHub Awesome tab to Sources page
+
+#### Configuration Schema
+- [ ] Extend source config to support:
+  ```json
+  {
+    "type": "github-awesome",
+    "config": {
+      "repo": "mahseema/awesome-ai-tools",
+      "categories": ["all"],
+      "checkFrequency": "daily"
+    }
+  }
+  ```
+
+#### IPC Channels
+- [ ] Add to `ipc-channels.ts`:
+  - [ ] `github:validate-repo` - Check if repo exists
+  - [ ] `github:fetch-awesome-list` - Get list data
+  - [ ] `github:preview-recent` - Preview recent additions
+- [ ] Implement handlers in `handlers.ts`
+
+#### Data Extraction
+- [ ] Markdown parsing logic
+  - [ ] Use `remark` or `markdown-it` for robust parsing
+  - [ ] Extract list items with URLs and descriptions
+  - [ ] Handle different awesome list formats
+  - [ ] Support both `- [Tool](url) - description` and other formats
+- [ ] Convert to headline format
+  - [ ] Tool name → headline title
+  - [ ] Description → headline summary
+  - [ ] Category → topic tags
+
+#### Testing
+- [ ] Test with multiple awesome list formats
+  - [ ] awesome-ai-tools
+  - [ ] awesome-python
+  - [ ] awesome-selfhosted
+- [ ] Handle edge cases (malformed entries, missing URLs)
+- [ ] Test GitHub API rate limiting handling
 
 ---
 
