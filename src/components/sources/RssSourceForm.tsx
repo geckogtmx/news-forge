@@ -66,7 +66,7 @@ export function RssSourceForm({ userId, onSuccess, onCancel, initialValues }: Rs
         setError(null);
         try {
             // Use window.electron directly as before
-            const items = await window.electron.ipcRenderer.invoke('rss:fetch', url);
+            const items = await window.electron.ipcRenderer.invoke('rss:fetch-feed', url);
             if (items && items.length > 0) {
                 setPreview({
                     title: items[0].title || 'Feed Preview',

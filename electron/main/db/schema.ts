@@ -25,7 +25,7 @@ export const newsSources = sqliteTable("newsSources", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     userId: integer("userId").notNull(),
     name: text("name").notNull(),
-    type: text("type", { enum: ["rss", "gmail", "youtube", "website"] }).notNull(),
+    type: text("type", { enum: ["rss", "gmail", "youtube", "website", "arxiv", "huggingface"] }).notNull(),
     config: text("config", { mode: 'json' }).notNull(),
     topics: text("topics", { mode: 'json' }).notNull(),
     isActive: integer("isActive", { mode: 'boolean' }).default(true).notNull(),
@@ -58,7 +58,7 @@ export const rawHeadlines = sqliteTable("rawHeadlines", {
     description: text("description"),
     url: text("url").notNull(),
     publishedAt: integer("publishedAt", { mode: 'timestamp' }),
-    source: text("source", { enum: ["rss", "gmail", "youtube", "website"] }).notNull(),
+    source: text("source", { enum: ["rss", "gmail", "youtube", "website", "arxiv", "huggingface"] }).notNull(),
     isSelected: integer("isSelected", { mode: 'boolean' }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: 'timestamp' }).default(new Date()).notNull(),
 });

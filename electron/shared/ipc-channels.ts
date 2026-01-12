@@ -152,6 +152,17 @@ export const YOUTUBE_CHANNELS = {
     EXTRACT_HEADLINE: 'youtube:extract-headline',
 } as const;
 
+// ArXiv channels
+export const ARXIV_CHANNELS = {
+    FETCH_RECENT: 'arxiv:fetch-recent',
+    SEARCH: 'arxiv:search',
+} as const;
+
+// Hugging Face channels
+export const HF_CHANNELS = {
+    FETCH_DAILY_PAPERS: 'hf:fetch-daily-papers',
+} as const;
+
 // Combine all channels for easy access
 export const IPC_CHANNELS = {
     USER: USER_CHANNELS,
@@ -166,5 +177,7 @@ export const IPC_CHANNELS = {
     RSS: RSS_CHANNELS,
     GMAIL: GMAIL_CHANNELS,
     YOUTUBE: YOUTUBE_CHANNELS,
+    ARXIV: ARXIV_CHANNELS,
+    HF: HF_CHANNELS,
 } as const;
 

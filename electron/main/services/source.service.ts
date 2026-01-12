@@ -64,7 +64,7 @@ export class NewsSourceService {
     /**
      * Get sources by type for a user
      */
-    async getSourcesByType(userId: number, type: 'rss' | 'gmail' | 'youtube' | 'website'): Promise<NewsSource[]> {
+    async getSourcesByType(userId: number, type: 'rss' | 'gmail' | 'youtube' | 'website' | 'arxiv' | 'huggingface'): Promise<NewsSource[]> {
         return await db
             .select()
             .from(newsSources)
@@ -156,6 +156,12 @@ export class NewsSourceService {
             case 'website':
                 if (!config.url) errors.push('Website URL is required');
                 if (!config.selectors) errors.push('CSS selectors are required');
+                break;
+            case 'arxiv':
+                if (!config.category) errors.push('ArXiv category is required');
+                break;
+            case 'huggingface':
+                // Minimal config, always valid for now
                 break;
         }
 

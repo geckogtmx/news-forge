@@ -1,4 +1,5 @@
 import Parser from 'rss-parser';
+import { net } from 'electron';
 import type { InsertRawHeadline } from '../db/schema';
 
 interface FeedItem {
@@ -35,9 +36,6 @@ export class RssService {
     constructor() {
         this.parser = new Parser({
             timeout: this.TIMEOUT_MS,
-            headers: {
-                'User-Agent': 'NewsForge/1.0',
-            },
         });
     }
 
@@ -49,11 +47,13 @@ export class RssService {
 
         for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
             try {
-                const feed = await this.parser.parseURL(url);
+                // Use Electron's net.request for reliable fetching
+                const xml = await this.fetchXml(url);
+                const feed = await this.parser.parseString(xml);
                 return feed as Feed;
             } catch (error: any) {
                 lastError = error;
-                console.warn(`[RSS] Attempt ${attempt}/${this.MAX_RETRIES} failed for ${url}:`, error.message);
+                console.error(`[RSS] Attempt ${attempt}/${this.MAX_RETRIES} failed for ${url}:`, error.message);
 
                 if (attempt < this.MAX_RETRIES) {
                     await this.delay(this.RETRY_DELAY_MS * attempt);
@@ -62,6 +62,52 @@ export class RssService {
         }
 
         throw new Error(`Failed to fetch feed after ${this.MAX_RETRIES} attempts: ${lastError?.message}`);
+    }
+
+    /**
+     * Fetch XML using Electron's net module
+     */
+    private fetchXml(url: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const request = net.request({
+                method: 'GET',
+                url: url,
+            });
+
+            request.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 NewsForge/1.0');
+            request.setHeader('Accept', 'application/rss+xml, application/xml, text/xml, */*');
+
+            let responseData = '';
+
+            request.on('response', (response) => {
+                if (response.statusCode !== 200) {
+                    // Consume response data to prevent memory leaks
+                    response.on('data', () => { });
+                    response.on('end', () => {
+                        reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
+                    });
+                    return;
+                }
+
+                response.on('data', (chunk) => {
+                    responseData += chunk.toString();
+                });
+
+                response.on('end', () => {
+                    resolve(responseData);
+                });
+
+                response.on('error', (error) => {
+                    reject(error);
+                });
+            });
+
+            request.on('error', (error) => {
+                reject(error);
+            });
+
+            request.end();
+        });
     }
 
     /**
@@ -92,18 +138,7 @@ export class RssService {
 
         try {
             // Fetch the HTML page
-            const response = await fetch(websiteUrl, {
-                headers: {
-                    'User-Agent': 'NewsForge/1.0',
-                },
-                signal: AbortSignal.timeout(this.TIMEOUT_MS),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const html = await response.text();
+            const html = await this.fetchXml(websiteUrl);
 
             // Parse HTML for <link rel="alternate"> tags
             const linkRegex = /<link[^>]*rel=["']alternate["'][^>]*>/gi;

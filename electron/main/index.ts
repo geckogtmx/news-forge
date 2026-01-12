@@ -120,7 +120,12 @@ async function createWindow() {
 
 app.whenReady().then(async () => {
   // Initialize all services (including Gemini)
+  // Initialize all services (including Gemini)
   await initializeServices();
+
+  // Run migrations (Temporary fix for dev)
+  const { runMigrations } = await import('./migrator');
+  await runMigrations();
 
   // Create the main window
   createWindow();

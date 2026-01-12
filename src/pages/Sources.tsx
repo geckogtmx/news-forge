@@ -7,9 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Edit, RefreshCw, Rss, Globe, Mail, Youtube } from 'lucide-react';
 import { RssSourceForm } from '@/components/sources/RssSourceForm';
+import { YoutubeSourceForm } from '@/components/sources/YoutubeSourceForm';
 import { GmailSourceForm } from '@/components/sources/GmailSourceForm';
 import { AddYoutubeVideoDialog } from '@/components/youtube/AddYoutubeVideoDialog';
-import { YoutubeSourceForm } from '@/components/sources/YoutubeSourceForm';
+import { ArxivSourceForm } from '@/components/sources/ArxivSourceForm';
+import { HFSourceForm } from '@/components/sources/HFSourceForm';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -88,6 +90,8 @@ export default function Sources() {
       case 'rss': return <Rss className="h-5 w-5 text-orange-500" />;
       case 'gmail': return <Mail className="h-5 w-5 text-red-500" />;
       case 'youtube': return <Youtube className="h-5 w-5 text-red-600" />;
+      case 'arxiv': return <Globe className="h-5 w-5 text-emerald-600" />;
+      case 'huggingface': return <span className="text-xl">🤗</span>;
       default: return <Globe className="h-5 w-5 text-blue-500" />;
     }
   };
@@ -120,6 +124,10 @@ export default function Sources() {
         return 'Gmail Integration';
       } else if (source.type === 'youtube') {
         return config.url || 'No URL';
+      } else if (source.type === 'arxiv') {
+        return config.category ? `Category: ${config.category}` : 'ArXiv Paper';
+      } else if (source.type === 'huggingface') {
+        return 'Daily Papers';
       }
       return 'Unknown Source';
     } catch (e) {
@@ -130,6 +138,8 @@ export default function Sources() {
   const getSourceUrl = (source: any) => {
     try {
       const config = safeJsonParse(source.config, {});
+      if (source.type === 'arxiv') return `https://arxiv.org/list/${config.category}/recent`;
+      if (source.type === 'huggingface') return 'https://huggingface.co/papers';
       return config.url || (source.type === 'gmail' ? 'Gmail Integration' : 'No URL');
     } catch (e) {
       return 'Invalid Config';
@@ -158,7 +168,7 @@ export default function Sources() {
                 Add Source
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>{sourceToEdit ? 'Edit Source' : 'Add News Source'}</DialogTitle>
                 <DialogDescription>
@@ -168,15 +178,21 @@ export default function Sources() {
 
               {userId ? (
                 <Tabs defaultValue={sourceToEdit?.type || "rss"} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="rss" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'rss'}>
-                      <Rss className="h-4 w-4" /> RSS Feed
+                      <Rss className="h-4 w-4" /> RSS
                     </TabsTrigger>
                     <TabsTrigger value="gmail" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'gmail'}>
                       <Mail className="h-4 w-4" /> Gmail
                     </TabsTrigger>
                     <TabsTrigger value="youtube" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'youtube'}>
                       <Youtube className="h-4 w-4" /> YouTube
+                    </TabsTrigger>
+                    <TabsTrigger value="arxiv" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'arxiv'}>
+                      <Globe className="h-4 w-4" /> ArXiv
+                    </TabsTrigger>
+                    <TabsTrigger value="huggingface" className="flex items-center gap-2" disabled={sourceToEdit && sourceToEdit.type !== 'huggingface'}>
+                      <span className="text-lg">🤗</span> Papers
                     </TabsTrigger>
                   </TabsList>
 
@@ -205,6 +221,28 @@ export default function Sources() {
                     </TabsContent>
                     <TabsContent value="youtube">
                       <YoutubeSourceForm
+                        userId={userId}
+                        onSuccess={handleSourceAdded}
+                        onCancel={() => {
+                          setIsAddDialogOpen(false);
+                          setSourceToEdit(null);
+                        }}
+                        initialValues={sourceToEdit}
+                      />
+                    </TabsContent>
+                    <TabsContent value="arxiv">
+                      <ArxivSourceForm
+                        userId={userId}
+                        onSuccess={handleSourceAdded}
+                        onCancel={() => {
+                          setIsAddDialogOpen(false);
+                          setSourceToEdit(null);
+                        }}
+                        initialValues={sourceToEdit}
+                      />
+                    </TabsContent>
+                    <TabsContent value="huggingface">
+                      <HFSourceForm
                         userId={userId}
                         onSuccess={handleSourceAdded}
                         onCancel={() => {

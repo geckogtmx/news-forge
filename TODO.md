@@ -8,6 +8,21 @@
 
 ---
 
+## ⚠️ KNOWN ISSUES (Needs Investigation in New Thread)
+
+### RSS Feed Fetch Failing
+**Status**: BLOCKED  
+**Error**: `"Failed to fetch feed"` when attempting to add RSS sources in UI  
+**Context**:
+- Frontend (`RssSourceForm.tsx`) correctly calls `window.electron.ipcRenderer.invoke('rss:fetch-feed', url)`
+- IPC channel name verified correct in `ipc-channels.ts`
+- Backend service (`rss.service.ts`) rewritten to use Electron's `net.request` instead of `fetch`
+- IPC handlers were reverted after accidental duplication crash
+- **Root Cause Unknown**: Handler may not be registered, or service may have runtime error
+- **Next Steps**: In fresh thread, verify RSS IPC handler exists in `electron/main/ipc/handlers.ts` and debug actual error from backend
+
+---
+
 ## 📊 Legend
 
 - `[ ]` - Not started
@@ -264,11 +279,11 @@
 - [x] Video playback integration
 - [x] Gemini summary extraction
 
-### Phase 3.4: Technical Migration: pnpm
-- [ ] Remove package-lock.json
-- [ ] Clean node_modules
-- [ ] Install dependencies with pnpm
-- [ ] Verify application stability
+### Phase 3.4: Technical Migration: pnpm ✅ COMPLETE
+- [x] Remove package-lock.json
+- [x] Clean node_modules
+- [x] Install dependencies with pnpm
+- [x] Verify application stability
 
 ### Phase 3.5: Research Integrations
 
@@ -293,7 +308,7 @@
 - [ ] Update `source.service.ts` source definitions
 - [ ] Ensure non-browser fetch strategy for these APIs
 
-### 3.5 Source Orchestration
+### 3.6 Source Orchestration
 
 #### Fetch Coordinator
 - [ ] Create `electron/main/services/fetch-coordinator.service.ts`

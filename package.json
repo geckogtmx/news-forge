@@ -63,6 +63,7 @@
     "drizzle-orm": "^0.45.1",
     "electron-updater": "^6.3.9",
     "embla-carousel-react": "^8.6.0",
+    "fast-xml-parser": "^5.3.3",
     "googleapis": "^170.0.0",
     "input-otp": "^1.4.2",
     "langchain": "^1.2.7",

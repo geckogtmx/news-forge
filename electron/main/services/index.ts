@@ -18,6 +18,8 @@ import { rssService, RssService } from './rss.service';
 import { gmailService } from './gmail.service';
 import { youtubeService } from './youtube.service';
 import { geminiService } from './gemini.service';
+import { arxivService } from './arxiv.service';
+import { huggingFaceService } from './huggingface.service';
 
 export {
     userService, UserService,
@@ -28,10 +30,11 @@ export {
     contentPackageService, ContentPackageService,
     archiveService, ArchiveService,
     settingsService, SettingsService,
-    progressService, ProgressService,
     rssService, RssService,
     gmailService,
     youtubeService,
+    arxivService,
+    huggingFaceService,
 };
 
 // Re-export all services as a single object for convenience
@@ -49,6 +52,8 @@ export const services = {
     gmail: gmailService,
     youtube: youtubeService,
     gemini: geminiService,
+    arxiv: arxivService,
+    huggingFace: huggingFaceService,
 };
 
 /**
