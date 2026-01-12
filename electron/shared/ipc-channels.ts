@@ -169,6 +169,12 @@ export const FETCH_CHANNELS = {
     CANCEL: 'fetch:cancel',
 } as const;
 
+// AI channels
+export const AI_CHANNELS = {
+    GET_MODELS: 'ai:get-models',
+    GENERATE: 'ai:generate',
+} as const;
+
 // Combine all channels for easy access
 export const IPC_CHANNELS = {
     USER: USER_CHANNELS,
@@ -186,5 +192,6 @@ export const IPC_CHANNELS = {
     ARXIV: ARXIV_CHANNELS,
     HF: HF_CHANNELS,
     FETCH: FETCH_CHANNELS,
+    AI: AI_CHANNELS,
 } as const;
 

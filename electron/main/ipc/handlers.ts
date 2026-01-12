@@ -799,6 +799,57 @@ export function registerIpcHandlers() {
         }
     });
 
+    // ============================================================
+    // AI HANDLERS
+    // ============================================================
+
+    ipcMain.handle(IPC_CHANNELS.AI.GET_MODELS, async () => {
+        try {
+            const models = await services.aiRegistry.getAllModels();
+            return { success: true, data: models };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.AI.GET_MODELS, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.AI.GENERATE, async (_event, userId: number, options: any, providerId?: string) => {
+        try {
+            // Fetch SECURE user settings to get decrypted API keys
+            const settings = await services.settings.getSecureSettings(userId);
+            const aiProviders = settings.aiProviders as any;
+
+            // Logic to determine API key:
+            // 1. If options.apiKey is set, use it.
+            // 2. If providerId is set, check settings.
+            // 3. If modelId is set, find provider and check settings.
+
+            let apiKey = options.apiKey;
+            let targetProviderId = providerId;
+
+            if (!apiKey) {
+                // Determine provider if needed
+                if (!targetProviderId && options.modelId) {
+                    const allModels = await services.aiRegistry.getAllModels();
+                    const model = allModels.find(m => m.id === options.modelId);
+                    if (model) {
+                        targetProviderId = model.providerId;
+                    }
+                }
+
+                // Look up key in settings
+                if (targetProviderId && aiProviders && aiProviders[targetProviderId]) {
+                    apiKey = aiProviders[targetProviderId].apiKey;
+                }
+            }
+
+            const result = await services.aiRegistry.generate({ ...options, apiKey }, providerId);
+            return { success: true, data: result };
+
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.AI.GENERATE, error);
+        }
+    });
+
     ipcMain.handle(IPC_CHANNELS.GMAIL.GET_AUTH_URL, async () => {
         try {
             const url = services.gmail.getAuthUrl();

@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+import { safeStorage } from 'electron';
 import { db } from '../db';
 import { userSettings, type UserSettings, type InsertUserSettings } from '../db/schema';
 
@@ -7,18 +8,86 @@ import { userSettings, type UserSettings, type InsertUserSettings } from '../db/
  */
 export class SettingsService {
     /**
-     * Get or create settings for a user
+     * Helper to encrypt text
+     */
+    private encrypt(text: string): string {
+        if (!text) return text;
+        if (safeStorage.isEncryptionAvailable()) {
+            return safeStorage.encryptString(text).toString('base64');
+        }
+        return text; // Fallback (or throw error in strict mode)
+    }
+
+    /**
+     * Helper to decrypt text
+     */
+    private decrypt(text: string): string {
+        if (!text) return text;
+        if (safeStorage.isEncryptionAvailable()) {
+            try {
+                return safeStorage.decryptString(Buffer.from(text, 'base64'));
+            } catch (error) {
+                console.error('Failed to decrypt settings:', error);
+                return '';
+            }
+        }
+        return text;
+    }
+
+    /**
+     * Get or create settings for a user (Public - Masks secrets)
      */
     async getSettings(userId: number): Promise<UserSettings> {
         let result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
 
         // If settings don't exist, create default settings
+        let settings: UserSettings;
         if (result.length === 0) {
-            const defaultSettings = await this.createDefaultSettings(userId);
-            return defaultSettings;
+            settings = await this.createDefaultSettings(userId);
+        } else {
+            settings = result[0];
         }
 
-        return result[0];
+        // Mask API keys for public/renderer consumption
+        if (settings.aiProviders) {
+            const maskedProviders = { ...settings.aiProviders } as any;
+            for (const key in maskedProviders) {
+                if (maskedProviders[key] && maskedProviders[key].apiKey) {
+                    // Replace actual key with a flag indicating it exists
+                    maskedProviders[key].apiKey = maskedProviders[key].apiKey ? '********' : '';
+                    maskedProviders[key].isConfigured = true;
+                }
+            }
+            settings.aiProviders = maskedProviders;
+        }
+
+        return settings;
+    }
+
+    /**
+     * Get settings with decrypted secrets (Internal use only)
+     */
+    async getSecureSettings(userId: number): Promise<UserSettings> {
+        let result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+
+        if (result.length === 0) {
+            return await this.createDefaultSettings(userId);
+        }
+
+        const settings = result[0];
+
+        // Decrypt API keys
+        if (settings.aiProviders) {
+            const decryptedProviders = { ...settings.aiProviders } as any;
+            for (const key in decryptedProviders) {
+                if (decryptedProviders[key] && decryptedProviders[key].apiKey) {
+                    decryptedProviders[key].apiKey = this.decrypt(decryptedProviders[key].apiKey);
+                }
+            }
+            settings.aiProviders = decryptedProviders;
+        }
+
+        return settings;
     }
 
     /**
@@ -136,7 +205,67 @@ export class SettingsService {
     async getAllSettings(): Promise<UserSettings[]> {
         return await db.select().from(userSettings);
     }
-}
 
+    /**
+     * Get AI Providers config
+     */
+    async getAIProviders(userId: number): Promise<any> {
+        const settings = await this.getSettings(userId);
+        return settings.aiProviders;
+    }
+
+    /**
+     * Update AI Provider config
+     */
+    async updateAIProvider(userId: number, providerId: string, config: any): Promise<UserSettings> {
+        // Get raw secure settings first to merge properly (we need existing keys if not provided)
+        // Actually, we usually save the whole config.
+        // If config contains apiKey, encrypt it.
+        const secureConfig = { ...config };
+        if (secureConfig.apiKey) {
+            secureConfig.apiKey = this.encrypt(secureConfig.apiKey);
+        }
+
+        // We need to fetch the RAW json from DB to merge, not the masked one from getSettings.
+        // Using getSecureSettings is fine, but we re-encrypt anyway.
+        // Let's just fetch raw DB row to avoid overhead, or use getSecureSettings.
+        // Easier: getSecureSettings, merge, and save.
+        // BUT `getSecureSettings` returns decrypted keys. If we merge `secureConfig` (encrypted) 
+        // with `getSecureSettings` (decrypted), we might mix states.
+        // Strategy: 
+        // 1. Fetch current RAW settings from DB directly (internal helper?) or just use getSecureSettings and RE-ENCRYPT everything? expensive.
+        // 2. Just fetch current raw providers blob.
+
+        let result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+        let currentProviders = result.length > 0 ? result[0].aiProviders : {};
+
+        const updated = { ...(currentProviders as any), [providerId]: secureConfig };
+
+        // Save to DB
+        const saved = await db
+            .update(userSettings)
+            .set({ aiProviders: updated, updatedAt: new Date() })
+            .where(eq(userSettings.userId, userId))
+            .returning();
+
+        // Return public (masked) settings
+        return await this.getSettings(userId);
+    }
+
+    /**
+     * Get AI Preferences
+     */
+    async getAIPreferences(userId: number): Promise<any> {
+        const settings = await this.getSettings(userId);
+        return settings.aiPreferences;
+    }
+
+    /**
+     * Update AI Preferences
+     */
+    async updateAIPreferences(userId: number, preferences: any): Promise<UserSettings> {
+        return await this.updateSettings(userId, { aiPreferences: preferences });
+    }
+}
 // Export singleton instance
 export const settingsService = new SettingsService();

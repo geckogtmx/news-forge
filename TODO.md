@@ -312,107 +312,57 @@ _No known issues at this time._
 - [x] Add IPC channels for fetch coordinator
 - [x] Register IPC handlers
 - [x] Export service in services index
-- [ ] Write integration tests for fetch coordinator
+- [x] Write integration tests for fetch coordinator
 
-### 3.7 GitHub Awesome Lists Integration
 
-> **Priority**: Implement after Source Orchestration (3.6) is complete
 
-#### GitHub Service
-- [ ] Create `electron/main/services/github-awesome.service.ts`
-  - [ ] `fetchRecentCommits(repo, since)` - Get commits since last check
-  - [ ] `parseCommitDiffs(commits)` - Extract file changes from diffs
-  - [ ] `extractNewTools(diffs)` - Parse markdown additions for new tools
-  - [ ] `validateToolEntry(entry)` - Ensure entry has name, description, URL
-  - [ ] Handle GitHub API authentication and rate limiting
-- [ ] Alternative: Simple polling approach
-  - [ ] `fetchMarkdownFile(repo)` - Get raw README
-  - [ ] `parseAwesomeList(markdown)` - Extract all tools
-  - [ ] `compareWithPrevious(current, previous)` - Find new entries
-  - [ ] Store file hash to detect changes
-
-#### GitHub Awesome UI
-- [ ] Create `src/components/sources/GitHubAwesomeSourceForm.tsx`
-  - [ ] Repository input (e.g., `mahseema/awesome-ai-tools`)
-  - [ ] Validate repository exists via GitHub API
-  - [ ] Preview recent additions
-  - [ ] Auto-populate topics from README categories
-  - [ ] Check frequency selector (daily/weekly)
-- [ ] Add GitHub Awesome tab to Sources page
-
-#### Configuration Schema
-- [ ] Extend source config to support:
-  ```json
-  {
-    "type": "github-awesome",
-    "config": {
-      "repo": "mahseema/awesome-ai-tools",
-      "categories": ["all"],
-      "checkFrequency": "daily"
-    }
-  }
-  ```
-
-#### IPC Channels
-- [ ] Add to `ipc-channels.ts`:
-  - [ ] `github:validate-repo` - Check if repo exists
-  - [ ] `github:fetch-awesome-list` - Get list data
-  - [ ] `github:preview-recent` - Preview recent additions
-- [ ] Implement handlers in `handlers.ts`
-
-#### Data Extraction
-- [ ] Markdown parsing logic
-  - [ ] Use `remark` or `markdown-it` for robust parsing
-  - [ ] Extract list items with URLs and descriptions
-  - [ ] Handle different awesome list formats
-  - [ ] Support both `- [Tool](url) - description` and other formats
-- [ ] Convert to headline format
-  - [ ] Tool name → headline title
-  - [ ] Description → headline summary
-  - [ ] Category → topic tags
-
-#### Testing
-- [ ] Test with multiple awesome list formats
-  - [ ] awesome-ai-tools
-  - [ ] awesome-python
-  - [ ] awesome-selfhosted
-- [ ] Handle edge cases (malformed entries, missing URLs)
-- [ ] Test GitHub API rate limiting handling
-
----
-
-## 🤖 Phase 4: AI Integration & Compilation
-
-### 4.1 LangChain Setup
-
-#### LangChain Installation
-- [ ] Install `langchain` and required packages
-- [ ] Install `@anthropic-ai/sdk` for Claude
-- [ ] Install `openai` for GPT models
-
-#### AI Service Configuration
-- [ ] Create `electron/main/services/ai.service.ts`
-  - [ ] Initialize Claude client
-  - [ ] Initialize OpenAI client
-  - [ ] `getChatModel(modelName)` - Factory for chat models
-  - [ ] Configure model parameters (temperature, max tokens, etc.)
-  - [ ] Implement retry logic for API failures
-- [ ] Create prompt templates in `electron/main/prompts/`
-  - [ ] `compilation.template.ts` - Headline grouping and summarization
-  - [ ] `content-generation.template.ts` - Content package generation
-  - [ ] `title-generation.template.ts` - YouTube title generation
-  - [ ] `description-generation.template.ts` - Description generation
-
-#### Token Tracking System
-- [ ] Create `electron/main/services/token-tracker.service.ts`
-  - [ ] `trackUsage(model, promptTokens, completionTokens, cost)` - Log usage
-  - [ ] `getUsageByDateRange(userId, start, end)` - Analytics
-  - [ ] `getUsageByModel(userId, model)` - Model-specific stats
-  - [ ] `getTotalCost(userId, period)` - Cost calculations
-- [ ] Create database table for token tracking
-  - [ ] Migration for `tokenUsage` table
-  - [ ] Fields: userId, model, operation, promptTokens, completionTokens, estimatedCost, timestamp
-- [ ] Implement LangChain callbacks for automatic tracking
+## 🤖 Phase 4: Hybrid AI Integration & Compilation
+ 
+ ### 4.1 Hybrid AI Architecture
+ 
+ #### AI Provider Registry (The "Switchboard")
+ - [x] Create `electron/main/services/ai/providers/base.provider.ts` interface
+   - [x] `id`, `name`, `type` (local/cloud)
+   - [x] `getModels()`
+   - [x] `generate(prompt, options)`
+   - [x] `stream(prompt, options)`
+ - [x] Create `electron/main/services/ai/ai.registry.ts`
+   - [x] Manage active providers
+   - [x] Route requests to appropriate provider
+   - [x] Handle fallback logic (Cloud -> Local)
+ 
+ #### Local Intelligence (Ollama)
+ - [x] Create `electron/main/services/ai/providers/ollama.provider.ts`
+   - [x] Connect to local Ollama instance (default: localhost:11434)
+   - [x] List available models (`qwen`, `mistral`, `emma`)
+   - [x] Implement generation and embedding support
+   - [x] Error handling: Check if Ollama is running
+ 
+ #### Cloud Intelligence (API)
+ - [x] Create `electron/main/services/ai/providers/openai.provider.ts`
+   - [x] GPT-4o, GPT-4o-mini support
+ - [x] Create `electron/main/services/ai/providers/anthropic.provider.ts`
+   - [x] Claude 3.5 Sonnet support
+ - [x] Create `electron/main/services/ai/providers/deepseek.provider.ts`
+   - [x] DeepSeek-V3 / R1 integration (High value/cost ratio)
+ - [x] Secure API Key Management
+   - [x] Update `SettingsService` to store encrypted keys for each provider
+ 
+ #### Just-in-Time (JIT) Selection UI
+ - [ ] Create `src/components/ai/ModelSelectorDialog.tsx`
+   - [ ] Show options: Local Speed, Local Power, Cloud Premium
+   - [ ] Display estimated cost (Cloud) vs Speed (Local)
+   - [ ] "Don't ask again" preference persistence
+ - [ ] Create `useAI` hook with `generateWithSelection()` method
+   - [ ] Triggers dialog if configured, or uses default
+ 
+ #### Token Tracking & Cost Control
+ - [ ] Create `electron/main/services/token-tracker.service.ts`
+   - [ ] Track local tokens (for speed stats)
+   - [ ] Track cloud tokens (for cost stats)
+   - [ ] `getUsageByProvider(userId)`
+ - [ ] Create database table for token tracking
+   - [ ] Fields: provider, model, promptTokens, completionTokens, cost, durationMs
 
 ### 4.1.5 Cost Estimation & Management
 
@@ -698,6 +648,7 @@ _No known issues at this time._
 - [ ] Create `src/components/chat/ChatInput.tsx`
   - [ ] Text input with multi-line support
   - [ ] Send button
+  - [ ] **Model Selector**: Integrate `ModelSelectorDialog` trigger
   - [ ] Suggested queries (quick actions)
     - [ ] "What were my top stories this week?"
     - [ ] "Show me AI trends"
@@ -845,6 +796,73 @@ _No known issues at this time._
 #### Graph View Integration
 - [ ] Export metadata for graph visualization
 - [ ] Create MOC (Map of Content) notes for topics
+
+---
+
+## 📦 Phase 5.5: GitHub Awesome Lists Integration (Deferred)
+
+> **Priority**: Deferred until after Phase 5 is complete. "Nice to have" source.
+
+### GitHub Service
+- [ ] Create `electron/main/services/github-awesome.service.ts`
+  - [ ] `fetchRecentCommits(repo, since)` - Get commits since last check
+  - [ ] `parseCommitDiffs(commits)` - Extract file changes from diffs
+  - [ ] `extractNewTools(diffs)` - Parse markdown additions for new tools
+  - [ ] `validateToolEntry(entry)` - Ensure entry has name, description, URL
+  - [ ] Handle GitHub API authentication and rate limiting
+- [ ] Alternative: Simple polling approach
+  - [ ] `fetchMarkdownFile(repo)` - Get raw README
+  - [ ] `parseAwesomeList(markdown)` - Extract all tools
+  - [ ] `compareWithPrevious(current, previous)` - Find new entries
+  - [ ] Store file hash to detect changes
+
+### GitHub Awesome UI
+- [ ] Create `src/components/sources/GitHubAwesomeSourceForm.tsx`
+  - [ ] Repository input (e.g., `mahseema/awesome-ai-tools`)
+  - [ ] Validate repository exists via GitHub API
+  - [ ] Preview recent additions
+  - [ ] Auto-populate topics from README categories
+  - [ ] Check frequency selector (daily/weekly)
+- [ ] Add GitHub Awesome tab to Sources page
+
+### Configuration Schema
+- [ ] Extend source config to support:
+  ```json
+  {
+    "type": "github-awesome",
+    "config": {
+      "repo": "mahseema/awesome-ai-tools",
+      "categories": ["all"],
+      "checkFrequency": "daily"
+    }
+  }
+  ```
+
+### IPC Channels
+- [ ] Add to `ipc-channels.ts`:
+  - [ ] `github:validate-repo` - Check if repo exists
+  - [ ] `github:fetch-awesome-list` - Get list data
+  - [ ] `github:preview-recent` - Preview recent additions
+- [ ] Implement handlers in `handlers.ts`
+
+### Data Extraction
+- [ ] Markdown parsing logic
+  - [ ] Use `remark` or `markdown-it` for robust parsing
+  - [ ] Extract list items with URLs and descriptions
+  - [ ] Handle different awesome list formats
+  - [ ] Support both `- [Tool](url) - description` and other formats
+- [ ] Convert to headline format
+  - [ ] Tool name → headline title
+  - [ ] Description → headline summary
+  - [ ] Category → topic tags
+
+### Testing
+- [ ] Test with multiple awesome list formats
+  - [ ] awesome-ai-tools
+  - [ ] awesome-python
+  - [ ] awesome-selfhosted
+- [ ] Handle edge cases (malformed entries, missing URLs)
+- [ ] Test GitHub API rate limiting handling
 
 ---
 

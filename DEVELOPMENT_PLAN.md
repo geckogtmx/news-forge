@@ -273,49 +273,18 @@ userSettings
 - [ ] Handle partial failures gracefully
 - [ ] Add progress event tracking
 
-#### 3.7 GitHub Awesome Lists Integration
-> **Note**: Implement after Source Orchestration (3.6) is complete
 
-Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a news source.
 
-**Approach**: Monitor commits to awesome list repositories and extract new tool/resource additions as headlines.
-
-**Key Features**:
-- Fetch recent commits via GitHub API
-- Parse markdown diffs to identify new entries
-- Extract tool name, description, URL, and category
-- Alternative: Periodic full README parsing with diff comparison
-- Support multiple awesome lists simultaneously
-
-**Configuration**:
-```json
-{
-  "type": "github-awesome",
-  "config": {
-    "repo": "mahseema/awesome-ai-tools",
-    "categories": ["all"],
-    "checkFrequency": "daily"
-  }
-}
-```
-
-**Implementation Tasks**:
-- [ ] GitHub API integration (commits, file contents)
-- [ ] Markdown parsing (remark/markdown-it)
-- [ ] Diff extraction for new tools
-- [ ] UI form for repository configuration
-- [ ] Rate limiting and caching
-
-### Phase 4: AI Integration & Compilation ⏳ (Planned)
+### Phase 4: AI Integration & Compilation 🚧 (In Progress)
 **Timeline**: Q1 2026  
-**Status**: ⏳ Not Started
+**Status**: 🚧 Active Development
 
-#### 4.1 LangChain Setup
-- [ ] Configure LangChain with Claude/GPT
-- [ ] Implement prompt templates for compilation
-- [ ] Create token tracking system
+#### 4.1 LangChain Setup (Backend Complete)
+- [ ] Configure LangChain with Claude/GPT (Replaced with Custom Provider Registry)
+- [x] Implement AI Provider System (Ollama, OpenAI, Anthropic, DeepSeek)
+- [x] Create token tracking system
 - [ ] Build cost analytics dashboard
-- [ ] Implement tiered model strategy
+- [x] Implement tiered model strategy (Backend ready)
 
 #### 4.1.5 Cost Estimation & Management
 > **High Priority**: Implement alongside token tracking for full cost transparency
@@ -432,6 +401,7 @@ Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a
 - [ ] Vector database indexing for semantic search
 - [ ] Intent detection and entity extraction
 - [ ] Context-aware prompt construction
+- [ ] **Model Selector**: JIT selection (Local/Cloud) per message or session
 - [ ] Response formatting with citations
 - [ ] Chat UI with message history and suggestions
 
@@ -454,6 +424,42 @@ Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a
 - [ ] Build bi-directional linking
 - [ ] Add metadata frontmatter
 - [ ] Create graph view integration
+
+### Phase 5.5: GitHub Awesome Lists Integration (Deferred)
+**Timeline**: TBD (Post-Phase 5)
+**Status**: ⏸️ Deferred
+
+> **Note**: Deferred until after Obsidian Integration (Phase 5) is complete. "Nice to have" source.
+
+Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a news source.
+
+**Approach**: Monitor commits to awesome list repositories and extract new tool/resource additions as headlines.
+
+**Key Features**:
+- Fetch recent commits via GitHub API
+- Parse markdown diffs to identify new entries
+- Extract tool name, description, URL, and category
+- Alternative: Periodic full README parsing with diff comparison
+- Support multiple awesome lists simultaneously
+
+**Configuration**:
+```json
+{
+  "type": "github-awesome",
+  "config": {
+    "repo": "mahseema/awesome-ai-tools",
+    "categories": ["all"],
+    "checkFrequency": "daily"
+  }
+}
+```
+
+**Implementation Tasks**:
+- [ ] GitHub API integration (commits, file contents)
+- [ ] Markdown parsing (remark/markdown-it)
+- [ ] Diff extraction for new tools
+- [ ] UI form for repository configuration
+- [ ] Rate limiting and caching
 
 ### Phase 6: User Interface & UX ⏳ (Planned)
 **Timeline**: Q2 2026  
@@ -698,20 +704,27 @@ Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a
 ## 💰 AI Cost Optimization Strategy
 
 ### Tiered Model Strategy
-1. **Tier 1 - High Priority**: Claude 3.5 Sonnet
-   - Content package generation
-   - Complex summarization
-   - Vault Assistant queries
+### Hybrid Model Architecture (Just-in-Time Selection)
 
-2. **Tier 2 - Standard**: GPT-4o-mini
-   - Simple compilations
-   - Headline grouping
-   - Basic summaries
+We implement a **"Right Tool for the Job"** philosophy, allowing dynamic selection between Local (Free/Private) and Cloud (Premium/Paid) models at critical workflow steps.
 
-3. **Tier 3 - Local**: Ollama (planned)
-   - Privacy-sensitive operations
-   - Offline mode
-   - Cost-free experimentation
+#### 1. The "Switchboard" (AI Provider Registry)
+- **Local Provider**: Ollama integration (`qwen`, `mistral`, `emma`)
+- **Cloud Provider**: OpenAI, Anthropic, DeepSeek integration
+- **Supported Models**: Curated list of best-in-class options (not every model in existence)
+
+#### 2. Critical Selection Points (JIT)
+At key moments (e.g., "Generate Script"), a `ModelSelectorDialog` appears:
+- **Option A: Local Speed** (e.g., `qwen2.5:7b`) - Free, Fast
+- **Option B: Local Power** (e.g., `qwen2.5:14b`) - Free, Smart
+- **Option C: Cloud Premium** (e.g., `Claude 3.5 Sonnet`) - Paid ($0.05), Best Quality
+
+#### 3. Default Tiered Roles (Auto-Pilot)
+If user disables JIT prompts, we default to:
+1. **Reasoning**: `qwen2.5:14b` (Local)
+2. **Standard**: `qwen2.5:7b` (Local)
+3. **Fast/Edge**: `emma3:4b` (Local)
+4. **Creative**: `devstral-small-2` (Local)
 
 ### Cost Control Measures
 - **Token Tracking**: Real-time monitoring per operation
@@ -742,6 +755,7 @@ Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a
 - [ ] **Custom AI Prompts**: User-defined compilation templates
 - [ ] **Integration API**: Allow third-party integrations
 - [ ] **Plugin System**: Extensibility for community additions
+- [ ] **Subscription Integration**: Web-based access to ChatGPT/Gemini (deferred)
 
 ### Advanced AI Capabilities
 - [ ] **Custom Fine-Tuning**: Train models on user's archive

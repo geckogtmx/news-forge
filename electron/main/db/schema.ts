@@ -115,6 +115,8 @@ export const userSettings = sqliteTable("userSettings", {
     format: text("format", { mode: 'json' }).notNull(),
     obsidianVaultPath: text("obsidianVaultPath"),
     llmModel: text("llmModel").default("claude-3.5-sonnet").notNull(),
+    aiProviders: text("aiProviders", { mode: 'json' }).default("{}").notNull(),
+    aiPreferences: text("aiPreferences", { mode: 'json' }).default("{}").notNull(),
     updatedAt: integer("updatedAt", { mode: 'timestamp' }).$onUpdate(() => new Date()).notNull(),
 });
 
