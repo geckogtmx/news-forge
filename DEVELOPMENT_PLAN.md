@@ -30,7 +30,7 @@ NewsForge is an AI-powered, local-first desktop application designed to streamli
 2. 🚧 **Core Workflow**: Implement end-to-end news aggregation → compilation → export flow
 3. ⏳ **AI Integration**: Deploy tiered LLM strategy with cost optimization
 4. ⏳ **Obsidian Sync**: Deep integration for archival and knowledge management
-5. ⏳ **Advanced Features**: Vault Assistant and Heat Engine capabilities
+5. ⏳ **Advanced Features**: Chat Assistant and Heat Engine capabilities
 
 ### Success Metrics
 - Fast startup time (< 3 seconds)
@@ -391,12 +391,51 @@ Track updates to curated "awesome" lists on GitHub (e.g., awesome-ai-tools) as a
 - [ ] Add tag suggestion system
 - [ ] Implement SEO optimization hints
 
-#### 4.4 Advanced AI Features
-- [ ] **Vault Assistant**: Q&A over archived content
-- [ ] **Heat Engine**: Detect trending topics
-- [ ] Implement meta-analysis capabilities
-- [ ] Build signal verification system
-- [ ] Create community signal detection
+#### 4.4 Chat Assistant (Archive Intelligence)
+> **Purpose**: AI-powered conversational interface for querying, analyzing, and generating content from archived runs
+
+**Core Capabilities**:
+- **Archive Search & Query**: Natural language queries over historical data
+  - "Show me all AI regulation stories from last month"
+  - "What did I cover about climate tech this quarter?"
+  - Time-based filtering (last week, month, quarter)
+  
+- **Summarization**: Generate summaries across runs and compilations
+  - "Summarize top 5 tech stories from this week"
+  - "Give me key takeaways from my AI research archive"
+  - Configurable depth (brief, detailed, comprehensive)
+  
+- **Cross-Run Analysis**: Identify patterns across multiple runs
+  - "What topics have I covered most frequently?"
+  - "Which sources provide the most valuable content?"
+  - Topic frequency analysis and coverage gaps
+  
+- **Content Regeneration**: Create new content from archived insights
+  - "Create a YouTube script combining these 3 quantum computing stories"
+  - "Draft an article from my top 5 fintech compilations"
+  - Mix and match content across runs
+  
+- **Trend Detection**: Identify emerging patterns in archive
+  - "What trends are appearing in my tech coverage?"
+  - "Show topics trending up/down over time"
+  - Heat score analysis over time periods
+
+**Implementation Approach**:
+- **RAG (Retrieval-Augmented Generation)**: Semantic search + LLM generation
+- **Vector Search**: Embed compilations and headlines for similarity search
+- **Query Parser**: Detect intent (search, summarize, analyze, generate) and entities
+- **Context Builder**: Fetch relevant data from database based on parsed query
+- **Response Formatter**: Add citations, markdown, clickable links to source runs
+
+**Technical Components**:
+- [ ] Chat Assistant Service with query processing
+- [ ] Vector database indexing for semantic search
+- [ ] Intent detection and entity extraction
+- [ ] Context-aware prompt construction
+- [ ] Response formatting with citations
+- [ ] Chat UI with message history and suggestions
+
+#### 4.5 Heat Engine (Trend Detection)
 
 ### Phase 5: Obsidian Integration ⏳ (Planned)
 **Timeline**: Q1 2026  

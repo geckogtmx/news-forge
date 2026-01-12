@@ -618,13 +618,156 @@ _No known issues at this time._
 
 ### 4.4 Advanced AI Features (Post-MVP)
 
-#### Vault Assistant
-- [ ] Create `electron/main/services/vault-assistant.service.ts`
-  - [ ] `indexArchives(userId)` - Create vector index of archives
-  - [ ] `queryArchives(userId, question)` - Q&A over archives
-  - [ ] `performMetaAnalysis(userId, topic)` - Analyze trends
-  - [ ] Use retrieval-augmented generation (RAG)
-- [ ] Create UI for Vault Assistant chat interface
+
+#### Chat Assistant (Archive Intelligence)
+
+> **Priority**: High - Unlocks archive value with natural language Q&A
+
+##### Chat Assistant Service
+- [ ] Create `electron/main/services/chat-assistant.service.ts`
+  - [ ] `sendMessage(userId, message)` - Main chat endpoint
+  - [ ] `getConversationHistory(userId, limit)` - Fetch chat history
+  - [ ] `clearConversation(userId)` - Reset conversation
+  - [ ] `parseQuery(message)` - Intent and entity extraction
+    - [ ] Detect intent: search, summarize, analyze, generate, trend
+    - [ ] Extract entities: topics, time periods, sources
+    - [ ] Extract filters: date ranges, source types
+  - [ ] `buildContext(intent, entities)` - Fetch relevant archive data
+    - [ ] Query runs by date range
+    - [ ] Filter compiledItems by topics
+    - [ ] Retrieve related headlines
+    - [ ] Sort by relevance/heat score
+    - [ ] Limit results to top N (e.g., 20)
+  - [ ] `generateResponse(query, context)` - LLM call with RAG
+    - [ ] Build system prompt (archive assistant role)
+    - [ ] Format context as structured data
+    - [ ] Call LLM with user query + context
+    - [ ] Parse and format response
+  - [ ] `formatResponse(llmOutput)` - Add citations and links
+    - [ ] Convert to markdown
+    - [ ] Add clickable run ID links
+    - [ ] Add source headline references
+    - [ ] Include metadata (run dates, sources)
+
+##### Vector Search & RAG
+- [ ] Choose embedding solution
+  - [ ] Option 1: OpenAI embeddings API (simple, paid)
+  - [ ] Option 2: Local sentence-transformers (free, more complex)
+  - [ ] Decision: Start with OpenAI, add local option later
+- [ ] Create `electron/main/services/vector-search.service.ts`
+  - [ ] `embedText(text)` - Generate embeddings
+  - [ ] `indexArchive(userId)` - Create vector index for all archived content
+    - [ ] Embed all compilation titles and summaries
+    - [ ] Embed headline titles
+    - [ ] Store embeddings in database or vector store
+  - [ ] `similaritySearch(query, topK)` - Find similar content
+    - [ ] Embed user query
+    - [ ] Compute cosine similarity with archive embeddings
+    - [ ] Return top K most similar items
+  - [ ] `hybridSearch(query, filters)` - Combine keyword + semantic search
+    - [ ] Vector search for semantic similarity
+    - [ ] SQL filters for exact matches (dates, sources)
+    - [ ] Merge and rank results
+- [ ] Database schema for embeddings
+  - [ ] Migration for `embeddings` table
+  - [ ] Fields: id, contentId, contentType (headline/compilation), embedding (vector), metadata
+  - [ ] Index for fast similarity searches
+
+##### Intent Detection & Query Parsing
+- [ ] Implement query parser
+  - [ ] Pattern matching for common intents:
+    - [ ] Search: "show me", "find", "what are"
+    - [ ] Summarize: "summarize", "give me key points"
+    - [ ] Analyze: "what trends", "most frequent"
+    - [ ] Generate: "create", "draft", "write"
+  - [ ] Time period extraction
+    - [ ] "last week", "past month", "Q1 2026"
+    - [ ] Convert to date ranges
+  - [ ] Topic extraction
+    - [ ] Named entity recognition (simple keyword matching for MVP)
+    - [ ] Match against known topics in archive
+  - [ ] Source type extraction ("from RSS", "from ArXiv")
+
+##### Chat UI Components
+- [ ] Create `src/pages/ChatAssistantPage.tsx`
+  - [ ] Chat message list (scrollable, auto-scroll to bottom)
+  - [ ] Message bubbles (user vs assistant)
+  - [ ] Loading indicators during LLM response
+  - [ ] Error handling and retry
+  - [ ] Conversation history persistence
+- [ ] Create `src/components/chat/ChatInput.tsx`
+  - [ ] Text input with multi-line support
+  - [ ] Send button
+  - [ ] Suggested queries (quick actions)
+    - [ ] "What were my top stories this week?"
+    - [ ] "Show me AI trends"
+    - [ ] "Summarize last month"
+  - [ ] Character count (optional)
+- [ ] Create `src/components/chat/MessageBubble.tsx`
+  - [ ] User messages (right-aligned, different color)
+  - [ ] Assistant messages (left-aligned, includes citations)
+  - [ ] Markdown rendering for assistant responses
+  - [ ] Clickable run ID links that open run details
+  - [ ] Copy message button
+- [ ] Create `src/components/chat/ArchiveContextPanel.tsx` (optional side panel)
+  - [ ] Show referenced runs in current conversation
+  - [ ] Display source headlines for context
+  - [ ] Quick navigation to referenced content
+
+##### IPC Channels
+- [ ] Add to `ipc-channels.ts`:
+  - [ ] `chat:send-message` - Send chat message
+  - [ ] `chat:get-history` - Fetch conversation history
+  - [ ] `chat:clear-conversation` - Reset chat
+  - [ ] `vector:index-archive` - Trigger vector indexing
+  - [ ] `vector:search` - Perform similarity search
+- [ ] Implement handlers in `handlers.ts`
+  - [ ] Wire chat service methods to IPC channels
+  - [ ] Add error handling for LLM failures
+  - [ ] Implement progress events for slow operations (indexing)
+
+##### Advanced Features (Post-MVP)
+- [ ] Content regeneration
+  - [ ] "Create YouTube script from runs #45, #47, #52"
+  - [ ] Combine multiple compilations into new content
+  - [ ] Maintain source attribution
+- [ ] Multi-turn conversations
+  - [ ] Context awareness across messages
+  - [ ] Follow-up questions without repeating context
+  - [ ] Conversation branching
+- [ ] Export chat insights
+  - [ ] Save conversation as markdown file
+  - [ ] Export to Obsidian note
+  - [ ] Share conversation link (if cloud sync added)
+- [ ] Voice input (future enhancement)
+  - [ ] Speech-to-text for queries
+  - [ ] More accessible interface
+- [ ] Scheduled summaries (future enhancement)
+  - [ ] Daily/weekly email digests
+  - [ ] Automated "what's new" reports
+
+##### Testing
+- [ ] Unit tests for query parser
+  - [ ] Test intent detection accuracy
+  - [ ] Test entity extraction
+  - [ ] Test time period parsing
+- [ ] Integration tests for RAG pipeline
+  - [ ] Mock vector search
+  - [ ] Test context building
+  - [ ] Verify response formatting
+- [ ] UI tests for chat interface
+  - [ ] Test message sending and receiving
+  - [ ] Test conversation history
+  - [ ] Test error states
+
+##### Database Schema
+- [ ] Create `chatConversations` table
+  - [ ] id, userId, createdAt, updatedAt
+- [ ] Create `chatMessages` table
+  - [ ] id, conversationId, role (user/assistant), content, citations (JSON), createdAt
+- [ ] Create `embeddings` table (for vector search)
+  - [ ] id, contentId, contentType, embedding (vector/BLOB), createdAt
+
 
 #### Heat Engine
 - [ ] Create `electron/main/services/heat-engine.service.ts`
