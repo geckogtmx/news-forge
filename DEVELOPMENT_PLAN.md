@@ -798,6 +798,7 @@ If user disables JIT prompts, we default to:
 ### Documentation
 - [README.md](README.md) - Project overview and quick start
 - [TODO.md](TODO.md) - Detailed task breakdown
+- [PROGRESS_REPORT.md](PROGRESS_REPORT.md) - Phase completion tracking and velocity metrics
 - This document (DEVELOPMENT_PLAN.md) - Strategic roadmap
 
 ### Issue Tracking
