@@ -22,11 +22,16 @@ export function useSettings() {
         return await invoke(IPC_CHANNELS.SETTINGS.UPDATE_MODEL, userId, model) as UserSettings | undefined;
     }, [invoke]);
 
+    const updateAIProvider = useCallback(async (userId: number, providerId: string, config: any) => {
+        return await invoke(IPC_CHANNELS.SETTINGS.UPDATE_AI_PROVIDER, userId, providerId, config) as UserSettings | undefined;
+    }, [invoke]);
+
     return {
         getSettings,
         updateSettings,
         updateObsidianPath,
         updateDefaultModel,
+        updateAIProvider,
         loading,
         error,
     };

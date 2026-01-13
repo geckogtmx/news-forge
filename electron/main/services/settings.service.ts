@@ -221,25 +221,30 @@ export class SettingsService {
         // Get raw secure settings first to merge properly (we need existing keys if not provided)
         // Actually, we usually save the whole config.
         // If config contains apiKey, encrypt it.
+        // Create working copy
         const secureConfig = { ...config };
-        if (secureConfig.apiKey) {
+
+        // Fetch current settings first to handle masking logic
+        let result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+        let currentProviders = result.length > 0 ? (result[0].aiProviders as any) || {} : {};
+
+        // Handle API Key Encryption
+        if (secureConfig.apiKey === '********') {
+            // If the key is the mask, we MUST preserve the existing encrypted key from the database.
+            // Do NOT re-encrypt the stars.
+            if (currentProviders[providerId] && currentProviders[providerId].apiKey) {
+                secureConfig.apiKey = currentProviders[providerId].apiKey;
+            } else {
+                // If no existing key but mask provided (weird state), clear it to be safe.
+                secureConfig.apiKey = '';
+            }
+        } else if (secureConfig.apiKey) {
+            // Assume it's a new plain-text key and encrypt it
             secureConfig.apiKey = this.encrypt(secureConfig.apiKey);
         }
 
-        // We need to fetch the RAW json from DB to merge, not the masked one from getSettings.
-        // Using getSecureSettings is fine, but we re-encrypt anyway.
-        // Let's just fetch raw DB row to avoid overhead, or use getSecureSettings.
-        // Easier: getSecureSettings, merge, and save.
-        // BUT `getSecureSettings` returns decrypted keys. If we merge `secureConfig` (encrypted) 
-        // with `getSecureSettings` (decrypted), we might mix states.
-        // Strategy: 
-        // 1. Fetch current RAW settings from DB directly (internal helper?) or just use getSecureSettings and RE-ENCRYPT everything? expensive.
-        // 2. Just fetch current raw providers blob.
-
-        let result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
-        let currentProviders = result.length > 0 ? result[0].aiProviders : {};
-
-        const updated = { ...(currentProviders as any), [providerId]: secureConfig };
+        // Merge with existing providers
+        const updated = { ...currentProviders, [providerId]: secureConfig };
 
         // Save to DB
         const saved = await db

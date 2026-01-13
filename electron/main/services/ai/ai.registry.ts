@@ -15,19 +15,25 @@ export class AIRegistry {
         return this.providers.get(id);
     }
 
-    async getAllModels(): Promise<AIModel[]> {
-        const allModels: AIModel[] = [];
-        for (const provider of this.providers.values()) {
-            if (await provider.isAvailable()) {
-                try {
-                    const models = await provider.getModels();
-                    allModels.push(...models);
-                } catch (error) {
-                    console.error(`[AIRegistry] Error fetching models from ${provider.id}:`, error);
-                }
+    async getAllModels(providerKeys?: Record<string, string>, providerId?: string): Promise<AIModel[]> {
+        const models: AIModel[] = [];
+
+        const providersToFetch = providerId
+            ? [this.providers.get(providerId)].filter(p => p !== undefined) as AIProvider[]
+            : Array.from(this.providers.values());
+
+        for (const provider of providersToFetch) {
+            try {
+                // Pass specific API key for this provider if available
+                const apiKey = providerKeys?.[provider.id];
+                const providerModels = await provider.getModels(apiKey);
+                models.push(...providerModels);
+            } catch (error) {
+                console.error(`[AIRegistry] Failed to fetch models from ${provider.id}:`, error);
             }
         }
-        return allModels;
+
+        return models;
     }
 
     async generate(options: AIRequestOptions, providerId?: string): Promise<AIResponse> {

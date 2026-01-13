@@ -43,8 +43,9 @@ export interface AIProvider {
 
     /**
      * Get list of available models from this provider
+     * @param apiKey Optional API key to use for fetching models (if not pre-configured)
      */
-    getModels(): Promise<AIModel[]>;
+    getModels(apiKey?: string): Promise<AIModel[]>;
 
     /**
      * Generate text completion

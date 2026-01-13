@@ -40,7 +40,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-          {navigationItems.map((item) => {
+          {navigationItems.filter(item => item.path !== '/settings').map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
             return (
@@ -48,8 +48,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 key={item.path}
                 href={item.path}
                 className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${active
-                    ? "bg-accent text-accent-foreground"
-                    : "text-foreground hover:bg-muted"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-foreground hover:bg-muted"
                   }`}
               >
                 <Icon className="w-5 h-5" />
@@ -58,6 +58,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
             );
           })}
         </nav>
+
+        {/* Bottom Actions */}
+        <div className="p-4 pt-0 space-y-2">
+          <Link
+            href="/settings"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors border ${isActive('/settings')
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+          >
+            <Settings className="w-5 h-5" />
+            <span className="text-sm font-medium">Settings</span>
+          </Link>
+        </div>
 
         {/* User Section */}
         <div className="p-4 border-t border-border space-y-3">

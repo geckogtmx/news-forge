@@ -26,6 +26,7 @@ import { OllamaProvider } from './ai/providers/ollama.provider';
 import { OpenAIProvider } from './ai/providers/openai.provider';
 import { AnthropicProvider } from './ai/providers/anthropic.provider';
 import { DeepSeekProvider } from './ai/providers/deepseek.provider';
+import { GoogleProvider } from './ai/providers/google.provider';
 
 export {
     userService, UserService,
@@ -93,11 +94,13 @@ export async function initializeServices() {
     const openai = new OpenAIProvider();
     const anthropic = new AnthropicProvider();
     const deepseek = new DeepSeekProvider();
+    const google = new GoogleProvider();
 
     aiRegistry.registerProvider(ollama);
     aiRegistry.registerProvider(openai);
     aiRegistry.registerProvider(anthropic);
     aiRegistry.registerProvider(deepseek);
+    aiRegistry.registerProvider(google);
 
     // Hydrate from settings (async)
     // We don't await this to avoid blocking startup if DB is slow, 

@@ -349,13 +349,21 @@ _No known issues at this time._
    - [x] Update `SettingsService` to store encrypted keys for each provider
  
  #### Just-in-Time (JIT) Selection UI
- - [ ] Create `src/components/ai/ModelSelectorDialog.tsx`
-   - [ ] Show options: Local Speed, Local Power, Cloud Premium
-   - [ ] Display estimated cost (Cloud) vs Speed (Local)
-   - [ ] "Don't ask again" preference persistence
- - [ ] Create `useAI` hook with `generateWithSelection()` method
-   - [ ] Triggers dialog if configured, or uses default
- 
+ - [x] Create `src/components/ai/ModelSelectorDialog.tsx`
+   - [x] Show options: Local Speed, Local Power, Cloud Premium
+   - [x] Display estimated cost (Cloud) vs Speed (Local)
+   - [x] "Don't ask again" preference persistence (Implemented via default settings)
+ - [x] Create `useAI` hook with `generateWithSelection()` method
+   - [x] Triggers dialog if configured, or uses default
+ - [ ] **NEW: Workflow Configuration**
+   - [ ] Add "Workflow Defaults" to `AISettings.tsx`
+   - [ ] Implement `getAllAvailableModels()` helper
+   - [ ] Add dropdowns for:
+     - [ ] Clustering (Grouping)
+     - [ ] Summarization
+     - [ ] Script Writing
+   - [ ] Save preferences to `userSettings.aiPreferences`
+
  #### Token Tracking & Cost Control
  - [ ] Create `electron/main/services/token-tracker.service.ts`
    - [ ] Track local tokens (for speed stats)

@@ -15,6 +15,13 @@
       "when": 1768238523230,
       "tag": "0001_lush_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768259764957,
+      "tag": "0002_giant_wallop",
+      "breakpoints": true
     }
   ]
 }

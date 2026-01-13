@@ -6,7 +6,7 @@ import os from 'node:os'
 import { config } from 'dotenv'
 import { update } from './update'
 import { registerIpcHandlers } from './ipc/handlers'
-import { initializeServices } from './services'
+import { initializeServices, services } from './services'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -119,7 +119,6 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  // Initialize all services (including Gemini)
   // Initialize all services (including Gemini)
   await initializeServices();
 

@@ -111,6 +111,7 @@ export const SETTINGS_CHANNELS = {
     UPDATE_TONE: 'settings:update-tone',
     UPDATE_FORMAT: 'settings:update-format',
     RESET: 'settings:reset',
+    UPDATE_AI_PROVIDER: 'settings:update-ai-provider',
 } as const;
 
 // Progress event channels (one-way from main to renderer)
