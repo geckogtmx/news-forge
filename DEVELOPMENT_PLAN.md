@@ -208,44 +208,44 @@ userSettings
 - [x] Configure VSCode debugging
 - [x] Set up Playwright + Vitest testing framework
 
-### Phase 2: Core Data Layer 🚧 (In Progress)
-**Timeline**: Current Priority  
-**Status**: 🚧 Active Development
+### Phase 2: Core Data Layer ✅ (Completed)
+**Timeline**: Completed
+**Status**: ✅ Done
 
 #### 2.1 Database Operations
-- [ ] Implement user management (CRUD)
-- [ ] Create news source management service
-- [ ] Build run tracking system
-- [ ] Develop headline storage and retrieval
-- [ ] Implement compiled items management
-- [ ] Create content package storage
-- [ ] Build archive management system
-- [ ] Implement settings persistence
+- [x] Implement user management (CRUD)
+- [x] Create news source management service
+- [x] Build run tracking system
+- [x] Develop headline storage and retrieval
+- [x] Implement compiled items management
+- [x] Create content package storage
+- [x] Build archive management system
+- [x] Implement settings persistence
 
 #### 2.2 IPC Communication
-- [ ] Define IPC channels for all database operations
-- [ ] Implement type-safe IPC handlers
-- [ ] Create renderer-side IPC hooks
-- [ ] Add error handling and logging
-- [ ] Implement progress events for long operations
+- [x] Define IPC channels for all database operations
+- [x] Implement type-safe IPC handlers
+- [x] Create renderer-side IPC hooks
+- [x] Add error handling and logging
+- [x] Implement progress events for long operations
 
 ### Phase 3: News Source Integration 🚧 (In Progress)
-**Timeline**: Current Priority  
+**Timeline**: Current Priority
 **Status**: 🚧 Active Development
 
-#### 3.1 RSS Feed Integration
-- [ ] Implement RSS parser
-- [ ] Create feed fetching service
-- [ ] Build headline extraction logic
-- [ ] Add error handling for invalid feeds
-- [ ] Implement rate limiting
+#### 3.1 RSS Feed Integration ✅
+- [x] Implement RSS parser
+- [x] Create feed fetching service
+- [x] Build headline extraction logic
+- [x] Add error handling for invalid feeds
+- [x] Implement rate limiting
 
-#### 3.2 Gmail Integration
-- [ ] Set up Gmail API authentication
-- [ ] Implement newsletter fetching
-- [ ] Create email parsing logic
-- [ ] Build filter system for relevant emails
-- [ ] Add OAuth2 flow UI
+#### 3.2 Gmail Integration ✅
+- [x] Set up Gmail API authentication
+- [x] Implement newsletter fetching
+- [x] Create email parsing logic
+- [x] Build filter system for relevant emails
+- [x] Add OAuth2 flow UI
 
 #### 3.3 YouTube Integration ✅ COMPLETE
 - [x] Implemented Gemini API for AI-powered video analysis
@@ -774,21 +774,22 @@ If user disables JIT prompts, we default to:
 - Database schema and migrations
 - Basic UI components and layout
 - Development environment setup
+- Core data layer implementation (Phase 2)
+- News source integration (RSS, Gmail, YouTube, ArXiv, HF)
+- IPC communication layer
 
 ### In Progress 🚧
-- Core data layer implementation
-- News source integration
-- IPC communication layer
+- Phase 4: Hybrid AI Integration & Compilation
+- Cost Estimation & Management
 
 ### Blocked ⛔
 - None currently
 
 ### Next Priorities 🎯
-1. Complete database service layer
-2. Implement RSS feed integration
-3. Build basic compilation UI
-4. Integrate Claude API for first AI features
-5. Create settings page for API key configuration
+1. **Phase 4.2**: News Compilation (Headline grouping & summarization)
+2. **Phase 4.3**: Content Package Generation (YouTube scripts)
+3. **Phase 4.1.5**: Cost Estimation UI (Token tracking & visualizers)
+4. **Phase 4.4**: Chat Assistant (Archive Intelligence)
 
 ---
 

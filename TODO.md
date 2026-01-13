@@ -355,14 +355,14 @@ _No known issues at this time._
    - [x] "Don't ask again" preference persistence (Implemented via default settings)
  - [x] Create `useAI` hook with `generateWithSelection()` method
    - [x] Triggers dialog if configured, or uses default
- - [ ] **NEW: Workflow Configuration**
-   - [ ] Add "Workflow Defaults" to `AISettings.tsx`
-   - [ ] Implement `getAllAvailableModels()` helper
-   - [ ] Add dropdowns for:
-     - [ ] Clustering (Grouping)
-     - [ ] Summarization
-     - [ ] Script Writing
-   - [ ] Save preferences to `userSettings.aiPreferences`
+ - [x] **NEW: Workflow Configuration**
+   - [x] Add "Workflow Defaults" to `AISettings.tsx`
+   - [x] Implement `getAllAvailableModels()` helper
+   - [x] Add dropdowns for:
+     - [x] Clustering (Grouping)
+     - [x] Summarization
+     - [x] Script Writing
+   - [x] Save preferences to `userSettings.aiPreferences`
 
  #### Token Tracking & Cost Control
  - [ ] Create `electron/main/services/token-tracker.service.ts`
