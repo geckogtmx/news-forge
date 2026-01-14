@@ -21,12 +21,15 @@ export function useIpc<T = any>() {
         try {
             // Access ipcRenderer exposed from preload
             // @ts-ignore
+            console.log(`[useIpc] Invoking ${channel} with args:`, args);
             const result = await window.ipcRenderer.invoke(channel, ...args) as IpcResponse<T>;
+            console.log(`[useIpc] Raw result from ${channel}:`, result);
 
             if (!result.success) {
                 throw new Error(result.error || 'Unknown IPC error');
             }
 
+            console.log(`[useIpc] Returning data from ${channel}:`, result.data);
             return result.data;
         } catch (err: any) {
             const errorMessage = err.message || 'An unexpected error occurred';

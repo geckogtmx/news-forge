@@ -1,3 +1,5 @@
+![NewsForge Header](assets/header.png)
+
 # NewsForge
 
 An AI-powered news aggregation and research desktop application built with Electron, React, and TypeScript.

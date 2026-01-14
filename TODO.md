@@ -518,22 +518,23 @@ _No known issues at this time._
 ### 4.2 News Compilation
 
 #### Headline Grouping Algorithm
-- [ ] Create `electron/main/services/compilation.service.ts`
-  - [ ] `groupHeadlines(headlines[])` - Cluster related headlines
-  - [ ] Use semantic similarity (embeddings + cosine similarity)
-  - [ ] Or use LLM-based grouping (more expensive)
-  - [ ] Configurable similarity threshold
-- [ ] Install embedding model (e.g., `sentence-transformers` via Python, or use OpenAI embeddings)
+- [x] Create `electron/main/services/compilation.service.ts`
+  - [x] `groupHeadlines(headlines[])` - Cluster related headlines
+  - [x] Use semantic similarity (keyword-based for MVP, embeddings future)
+  - [x] Configurable similarity threshold
+- [ ] Future: Install embedding model for advanced semantic similarity
 
 #### Compilation Generation
-- [ ] `generateCompilation(headlineGroup)` - Create summary
-  - [ ] Use Claude 3.5 Sonnet for high-quality summaries
-  - [ ] Generate title for the compilation
-  - [ ] Create 2-3 paragraph summary
-  - [ ] Extract key points
-  - [ ] Link to source headlines
-  - [ ] Track tokens and cost
-- [ ] `scoreSummaryQuality(summary)` - Optional quality check
+- [x] `generateCompilation(headlineGroup)` - Create summary
+  - [x] Support for all AI providers (Ollama, OpenAI, Anthropic, DeepSeek)
+  - [x] Generate title for the compilation
+  - [x] Create 2-3 paragraph summary
+  - [x] Extract key points (hook)
+  - [x] Link to source headlines
+  - [x] Track tokens and cost
+- [x] `scoreSummaryQuality(summary)` - Placeholder implemented
+- [x] Add IPC handlers for compilation operations
+- [x] Create `useCompilation` React hook
 - [ ] Write unit tests with mocked LLM responses
 
 #### Batch Compilation UI

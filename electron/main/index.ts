@@ -4,9 +4,15 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
 import { config } from 'dotenv'
+import log from 'electron-log'
 import { update } from './update'
 import { registerIpcHandlers } from './ipc/handlers'
 import { initializeServices, services } from './services'
+
+// Configure logging
+log.transports.file.level = 'info';
+log.transports.console.format = '{h}:{i}:{s} {text}';
+Object.assign(console, log.functions);
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

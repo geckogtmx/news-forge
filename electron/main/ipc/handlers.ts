@@ -330,7 +330,9 @@ export function registerIpcHandlers() {
 
     ipcMain.handle(IPC_CHANNELS.HEADLINE.GET_BY_RUN, async (_event, runId: number, filters?: any) => {
         try {
+            console.log(`[IPC ${IPC_CHANNELS.HEADLINE.GET_BY_RUN}] Called with runId:`, runId, 'filters:', filters);
             const headlines = await services.headline.getHeadlinesByRun(runId, filters);
+            console.log(`[IPC ${IPC_CHANNELS.HEADLINE.GET_BY_RUN}] Returning ${headlines.length} headlines`);
             return { success: true, data: headlines };
         } catch (error) {
             return handleIpcError(IPC_CHANNELS.HEADLINE.GET_BY_RUN, error);
@@ -339,7 +341,9 @@ export function registerIpcHandlers() {
 
     ipcMain.handle(IPC_CHANNELS.HEADLINE.GET_SELECTED, async (_event, runId: number) => {
         try {
+            console.log(`[IPC ${IPC_CHANNELS.HEADLINE.GET_SELECTED}] Called with runId:`, runId);
             const headlines = await services.headline.getSelectedHeadlines(runId);
+            console.log(`[IPC ${IPC_CHANNELS.HEADLINE.GET_SELECTED}] Returning ${headlines.length} headlines`);
             return { success: true, data: headlines };
         } catch (error) {
             return handleIpcError(IPC_CHANNELS.HEADLINE.GET_SELECTED, error);
@@ -586,6 +590,15 @@ export function registerIpcHandlers() {
             return { success: true, data: result };
         } catch (error) {
             return handleIpcError(IPC_CHANNELS.PACKAGE.DELETE, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.PACKAGE.GENERATE, async (_event, packageId: number, userId: number, modelId?: string, providerId?: string) => {
+        try {
+            const result = await services.contentPackage.generatePackageContent(packageId, userId, modelId, providerId);
+            return { success: true, data: result };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.PACKAGE.GENERATE, error);
         }
     });
 
@@ -1062,6 +1075,37 @@ export function registerIpcHandlers() {
         }
     });
 
+    // ============================================================
+    // COMPILATION HANDLERS
+    // ============================================================
+
+    ipcMain.handle(IPC_CHANNELS.COMPILATION.GROUP_HEADLINES, async (_event, runId: number, options?: any) => {
+        try {
+            const headlines = await services.headline.getSelectedHeadlines(runId);
+            const groups = await services.compilation.groupHeadlines(headlines, options);
+            return { success: true, data: groups };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.COMPILATION.GROUP_HEADLINES, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.COMPILATION.GENERATE_COMPILATION, async (_event, headlineGroup: any, runId: number, options: any) => {
+        try {
+            const result = await services.compilation.generateCompilation(headlineGroup, runId, options);
+            return { success: true, data: result };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.COMPILATION.GENERATE_COMPILATION, error);
+        }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.COMPILATION.COMPILE_RUN, async (_event, runId: number, options: any) => {
+        try {
+            const results = await services.compilation.compileRun(runId, options);
+            return { success: true, data: results };
+        } catch (error) {
+            return handleIpcError(IPC_CHANNELS.COMPILATION.COMPILE_RUN, error);
+        }
+    });
+
     console.log('[IPC] All handlers registered successfully');
 }
-

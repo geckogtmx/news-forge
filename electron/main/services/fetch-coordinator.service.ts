@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { newsSourceService } from './source.service';
 import { runService } from './run.service';
 import { headlineService } from './headline.service';
@@ -58,7 +59,7 @@ export class FetchCoordinatorService {
      */
     async runFetchForAllSources(userId: number): Promise<RunResult> {
         const startTime = Date.now();
-        console.log(`[FetchCoordinator] Starting fetch for user ${userId}`);
+        log.info(`[FetchCoordinator] Starting fetch for user ${userId}`);
 
         // Create a new run
         const run = await runService.createRun(userId);
@@ -68,7 +69,7 @@ export class FetchCoordinatorService {
         const sources = await newsSourceService.getActiveSourcesByUser(userId);
         const totalSources = sources.length;
 
-        console.log(`[FetchCoordinator] Found ${totalSources} active sources for run ${runId}`);
+        log.info(`[FetchCoordinator] Found ${totalSources} active sources for run ${runId}`);
 
         if (totalSources === 0) {
             await runService.completeRun(runId, {

@@ -21,6 +21,7 @@ import { geminiService } from './gemini.service';
 import { arxivService } from './arxiv.service';
 import { huggingFaceService } from './huggingface.service';
 import { fetchCoordinatorService, FetchCoordinatorService } from './fetch-coordinator.service';
+import { compilationService, CompilationService } from './compilation.service';
 import { aiRegistry, AIRegistry } from './ai/ai.registry';
 import { OllamaProvider } from './ai/providers/ollama.provider';
 import { OpenAIProvider } from './ai/providers/openai.provider';
@@ -43,6 +44,7 @@ export {
     arxivService,
     huggingFaceService,
     fetchCoordinatorService, FetchCoordinatorService,
+    compilationService, CompilationService,
 };
 
 // Re-export all services as a single object for convenience
@@ -63,6 +65,7 @@ export const services = {
     arxiv: arxivService,
     huggingFace: huggingFaceService,
     fetchCoordinator: fetchCoordinatorService,
+    compilation: compilationService,
     aiRegistry: aiRegistry,
 };
 

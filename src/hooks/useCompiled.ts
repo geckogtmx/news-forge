@@ -1,37 +1,71 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useIpc } from './useIpc';
-import { IPC_CHANNELS } from '../../electron/shared/ipc-channels';
-import type { CompiledItem, InsertCompiledItem } from '../../electron/main/db/schema';
-// We might need RawHeadline for getRelatedHeadlines return type
-import type { RawHeadline } from '../../electron/main/db/schema';
+import type { CompiledItem, InsertCompiledItem, RawHeadline } from '../../electron/main/db/schema';
 
 export function useCompiled() {
-    const { invoke, loading, error } = useIpc<CompiledItem | CompiledItem[] | RawHeadline[] | boolean>();
+    const { invoke, loading, error } = useIpc();
+    const [compiledItems, setCompiledItems] = useState<CompiledItem[]>([]);
 
     const createCompiledItem = useCallback(async (data: Omit<InsertCompiledItem, 'id' | 'createdAt' | 'updatedAt'>) => {
-        return await invoke(IPC_CHANNELS.COMPILED.CREATE, data) as CompiledItem | undefined;
+        const result = await invoke('compiled:create', data) as CompiledItem | undefined;
+        if (result) {
+            setCompiledItems(prev => [...prev, result]);
+        }
+        return result;
+    }, [invoke]);
+
+    const fetchCompiledItemsByRun = useCallback(async (runId: number) => {
+        const result = await invoke('compiled:get-by-run', runId) as CompiledItem[] | undefined;
+        if (result) {
+            setCompiledItems(result);
+        }
+        return result;
     }, [invoke]);
 
     const getCompiledItemsByRun = useCallback(async (runId: number) => {
-        return await invoke(IPC_CHANNELS.COMPILED.GET_BY_RUN, runId) as CompiledItem[] | undefined;
+        return await invoke('compiled:get-by-run', runId) as CompiledItem[] | undefined;
+    }, [invoke]);
+
+    const getSelectedCompiledItems = useCallback(async (runId: number) => {
+        return await invoke('compiled:get-selected', runId) as CompiledItem[] | undefined;
     }, [invoke]);
 
     const updateCompiledItem = useCallback(async (id: number, data: Partial<CompiledItem>) => {
-        return await invoke(IPC_CHANNELS.COMPILED.UPDATE, id, data) as CompiledItem | undefined;
+        const result = await invoke('compiled:update', id, data) as CompiledItem | undefined;
+        if (result) {
+            setCompiledItems(prev => prev.map(item => item.id === id ? result : item));
+        }
+        return result;
+    }, [invoke]);
+
+    const toggleSelection = useCallback(async (id: number, selected: boolean) => {
+        const result = await invoke('compiled:toggle-selection', id, selected) as CompiledItem | undefined;
+        if (result) {
+            setCompiledItems(prev => prev.map(item => item.id === id ? result : item));
+        }
+        return result;
     }, [invoke]);
 
     const deleteCompiledItem = useCallback(async (id: number) => {
-        return await invoke(IPC_CHANNELS.COMPILED.DELETE, id) as boolean | undefined;
+        const result = await invoke('compiled:delete', id) as boolean | undefined;
+        if (result) {
+            setCompiledItems(prev => prev.filter(item => item.id !== id));
+        }
+        return result;
     }, [invoke]);
 
     const getRelatedHeadlines = useCallback(async (id: number) => {
-        return await invoke(IPC_CHANNELS.COMPILED.GET_RELATED_HEADLINES, id) as RawHeadline[] | undefined;
+        return await invoke('compiled:get-related-headlines', id) as RawHeadline[] | undefined;
     }, [invoke]);
 
     return {
+        compiledItems,
         createCompiledItem,
+        fetchCompiledItemsByRun,
         getCompiledItemsByRun,
+        getSelectedCompiledItems,
         updateCompiledItem,
+        toggleSelection,
         deleteCompiledItem,
         getRelatedHeadlines,
         loading,

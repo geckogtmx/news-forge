@@ -8,6 +8,9 @@ export interface AIModel {
     providerId: string;
     contextWindow: number;
     enabled: boolean;
+    isLocal?: boolean;
+    costPer1kInput?: number;
+    costPer1kOutput?: number;
 }
 
 export function useAI() {

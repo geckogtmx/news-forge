@@ -88,6 +88,7 @@ export const PACKAGE_CHANNELS = {
     MARK_EXPORTED: 'package:mark-exported',
     MARK_READY: 'package:mark-ready',
     DELETE: 'package:delete',
+    GENERATE: 'package:generate',
 } as const;
 
 // Archive channels
@@ -176,6 +177,13 @@ export const AI_CHANNELS = {
     GENERATE: 'ai:generate',
 } as const;
 
+// Compilation channels
+export const COMPILATION_CHANNELS = {
+    GROUP_HEADLINES: 'compilation:group-headlines',
+    GENERATE_COMPILATION: 'compilation:generate-compilation',
+    COMPILE_RUN: 'compilation:compile-run',
+} as const;
+
 // Combine all channels for easy access
 export const IPC_CHANNELS = {
     USER: USER_CHANNELS,
@@ -194,5 +202,6 @@ export const IPC_CHANNELS = {
     HF: HF_CHANNELS,
     FETCH: FETCH_CHANNELS,
     AI: AI_CHANNELS,
+    COMPILATION: COMPILATION_CHANNELS,
 } as const;
 

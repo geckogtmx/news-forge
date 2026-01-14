@@ -1,3 +1,6 @@
+import { aiRegistry } from './ai/ai.registry';
+import { settingsService } from './settings.service';
+import { compiledItemService } from './compiled.service';
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../db';
 import { contentPackages, type ContentPackage, type InsertContentPackage } from '../db/schema';
@@ -6,6 +9,98 @@ import { contentPackages, type ContentPackage, type InsertContentPackage } from 
  * ContentPackageService - Handles all content package-related database operations
  */
 export class ContentPackageService {
+    // ... existing methods ...
+
+    /**
+     * Generate content for a package using AI
+     */
+    async generatePackageContent(
+        packageId: number,
+        userId: number,
+        modelId?: string,
+        providerId?: string
+    ): Promise<{ pkg: ContentPackage; usage: { tokens: number; cost: number } }> {
+        // 1. Get package and compiled item
+        const pkg = await this.getPackageById(packageId);
+        if (!pkg) throw new Error(`Package ${packageId} not found`);
+
+        const compiledItem = await compiledItemService.getCompiledItemById(pkg.compiledItemId);
+        if (!compiledItem) throw new Error(`Compiled item ${pkg.compiledItemId} not found`);
+
+        // 2. Get settings and API keys
+        const settings = await settingsService.getSecureSettings(userId);
+        const aiPreferences = settings?.aiPreferences as any;
+        const aiProviders = settings?.aiProviders as any;
+
+        const selectedModel = modelId || aiPreferences?.defaultModel || 'claude-3.5-sonnet';
+        const selectedProvider = providerId || 'anthropic';
+
+        let apiKey = undefined;
+        if (aiProviders && aiProviders[selectedProvider]) {
+            apiKey = aiProviders[selectedProvider].apiKey;
+        }
+
+        // 3. Build Prompt
+        const prompt = `
+You are a professional YouTube Content Strategist.
+Your task is to turn the following news summary into high-performing YouTube content assets.
+
+Topic: ${compiledItem.topic}
+Hook: ${compiledItem.hook}
+Summary: ${compiledItem.summary}
+
+Please generate:
+1. A click-worthy YouTube Title (max 60 chars)
+2. An engaging YouTube Description (with timestamps placeholder)
+3. A structured Script Outline (Hook, Core Content, Conclusion)
+
+Format your response as a JSON object:
+{
+  "youtubeTitle": "string",
+  "youtubeDescription": "string",
+  "scriptOutline": "string"
+}
+`;
+
+        // 4. Call AI
+        const response = await aiRegistry.generate(
+            {
+                modelId: selectedModel,
+                prompt,
+                systemPrompt: "You are an expert YouTube strategist. Output strictly JSON.",
+                temperature: 0.7,
+                apiKey
+            },
+            selectedProvider
+        );
+
+        // 5. Parse Response
+        let content;
+        try {
+            let clean = response.content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+            // Finding the first { and last } to handle markdown wrapper text
+            const firstBrace = clean.indexOf('{');
+            const lastBrace = clean.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                clean = clean.substring(firstBrace, lastBrace + 1);
+            }
+            content = JSON.parse(clean);
+        } catch (e) {
+            console.error("Failed to parse AI response", e);
+            throw new Error("AI response was not valid JSON");
+        }
+
+        // 6. Update Package
+        const updatedPkg = await this.updatePackageContent(packageId, content);
+        if (!updatedPkg) throw new Error("Failed to update package");
+
+        // 7. Calculate Cost (Simplistic)
+        const tokens = response.usage?.totalTokens || 0;
+        const cost = 0; // TODO: Implement cost calc
+
+        return { pkg: updatedPkg, usage: { tokens, cost } };
+    }
+
     /**
      * Create a new content package
      */
@@ -15,6 +110,8 @@ export class ContentPackageService {
         const result = await db.insert(contentPackages).values(data).returning();
         return result[0];
     }
+    // ... rest of class ...
+
 
     /**
      * Get content package by ID
