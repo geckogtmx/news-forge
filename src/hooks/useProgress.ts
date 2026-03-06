@@ -22,7 +22,7 @@ export function useProgress() {
     /**
      * Listen for run progress
      */
-    const onRunProgress = (callback: ProgressCallback) => {
+    const useRunProgress = (callback: ProgressCallback) => {
         useEffect(() => {
             const ipc = (window as any).ipcRenderer;
             if (!ipc) return;
@@ -39,7 +39,7 @@ export function useProgress() {
     /**
      * Listen for compilation progress
      */
-    const onCompileProgress = (callback: ProgressCallback) => {
+    const useCompileProgress = (callback: ProgressCallback) => {
         useEffect(() => {
             const ipc = (window as any).ipcRenderer;
             if (!ipc) return;
@@ -56,7 +56,7 @@ export function useProgress() {
     /**
      * Listen for export progress
      */
-    const onExportProgress = (callback: ProgressCallback) => {
+    const useExportProgress = (callback: ProgressCallback) => {
         useEffect(() => {
             const ipc = (window as any).ipcRenderer;
             if (!ipc) return;
@@ -71,8 +71,8 @@ export function useProgress() {
     };
 
     return {
-        onRunProgress,
-        onCompileProgress,
-        onExportProgress,
+        useRunProgress,
+        useCompileProgress,
+        useExportProgress,
     };
 }

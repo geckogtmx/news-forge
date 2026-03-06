@@ -6,7 +6,7 @@ import { AIProvider, AIModel, AIRequestOptions, AIResponse } from './base.provid
 export class GoogleProvider implements AIProvider {
     id = 'google';
     name = 'Google Gemini';
-    type: 'cloud' = 'cloud';
+    type = 'cloud' as const;
 
     private client: GoogleGenerativeAI | null = null;
     private apiKey: string = '';
@@ -148,7 +148,7 @@ export class GoogleProvider implements AIProvider {
         // Assuming current version does.
 
         // However, if we utilize generic prompt construction:
-        let fullPrompt = options.prompt;
+        const fullPrompt = options.prompt;
 
         // Note: GoogleGenerativeAI SDK logic:
         // If system prompt is needed, it's safer to pass it in getGenerativeModel config 

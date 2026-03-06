@@ -39,7 +39,7 @@ export class SettingsService {
      * Get or create settings for a user (Public - Masks secrets)
      */
     async getSettings(userId: number): Promise<UserSettings> {
-        let result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+        const result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
 
         // If settings don't exist, create default settings
         let settings: UserSettings;
@@ -69,7 +69,7 @@ export class SettingsService {
      * Get settings with decrypted secrets (Internal use only)
      */
     async getSecureSettings(userId: number): Promise<UserSettings> {
-        let result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+        const result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
 
         if (result.length === 0) {
             return await this.createDefaultSettings(userId);
@@ -226,8 +226,8 @@ export class SettingsService {
         const secureConfig = { ...config };
 
         // Fetch current settings first to handle masking logic
-        let result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
-        let currentProviders = result.length > 0 ? (result[0].aiProviders as any) || {} : {};
+        const result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+        const currentProviders = result.length > 0 ? (result[0].aiProviders as any) || {} : {};
 
         // Handle API Key Encryption
         if (secureConfig.apiKey === '********') {

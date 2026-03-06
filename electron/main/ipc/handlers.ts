@@ -3,6 +3,7 @@ import log from 'electron-log';
 import { IPC_CHANNELS } from '../../shared/ipc-channels';
 import { services } from '../services';
 import { DEFAULT_USER_ID } from '../../shared/constants';
+import { validateIpcArgs } from '../../shared/validation';
 
 /**
  * Generic error handler for IPC calls
@@ -23,7 +24,8 @@ function createHandler<TArgs extends unknown[], TResult>(
 ) {
     ipcMain.handle(channel, async (_event: IpcMainInvokeEvent, ...args: TArgs) => {
         try {
-            const result = await handler(...args);
+            const validatedArgs = validateIpcArgs(channel, args) as TArgs;
+            const result = await handler(...validatedArgs);
             return { success: true, data: result };
         } catch (error) {
             return handleIpcError(channel, error);
@@ -148,7 +150,8 @@ export function registerIpcHandlers() {
     // RSS.PREVIEW_FEED needs custom logic (slice items)
     ipcMain.handle(IPC_CHANNELS.RSS.PREVIEW_FEED, async (_event, url: string) => {
         try {
-            const feed = await services.rss.fetchFeed(url);
+            const [validatedUrl] = validateIpcArgs(IPC_CHANNELS.RSS.PREVIEW_FEED, [url]) as [string];
+            const feed = await services.rss.fetchFeed(validatedUrl);
             return { success: true, data: { ...feed, items: feed.items.slice(0, 5) } };
         } catch (error) {
             return handleIpcError(IPC_CHANNELS.RSS.PREVIEW_FEED, error);
@@ -176,7 +179,8 @@ export function registerIpcHandlers() {
     // YOUTUBE.EXTRACT_HEADLINE needs custom logic
     ipcMain.handle(IPC_CHANNELS.YOUTUBE.EXTRACT_HEADLINE, async (_event, url: string) => {
         try {
-            const preview = await services.youtube.previewVideo(url);
+            const [validatedUrl] = validateIpcArgs(IPC_CHANNELS.YOUTUBE.EXTRACT_HEADLINE, [url]) as [string];
+            const preview = await services.youtube.previewVideo(validatedUrl);
             return { success: true, data: preview.headline };
         } catch (error) {
             return handleIpcError(IPC_CHANNELS.YOUTUBE.EXTRACT_HEADLINE, error);

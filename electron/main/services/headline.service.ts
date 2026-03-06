@@ -44,7 +44,7 @@ export class HeadlineService {
             dateTo?: Date;
         }
     ): Promise<RawHeadline[]> {
-        let conditions = [eq(rawHeadlines.runId, runId)];
+        const conditions = [eq(rawHeadlines.runId, runId)];
 
         if (filters?.sourceId) {
             conditions.push(eq(rawHeadlines.sourceId, filters.sourceId));

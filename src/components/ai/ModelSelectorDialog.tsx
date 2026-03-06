@@ -55,19 +55,19 @@ export function ModelSelectorDialog({ open, onOpenChange, onSelect }: ModelSelec
         }
     ];
 
-    React.useEffect(() => {
-        if (open && currentUser) {
-            checkAvailability();
-        }
-    }, [open, currentUser]);
-
-    const checkAvailability = async () => {
+    const checkAvailability = React.useCallback(async () => {
         if (!currentUser) return;
         const settings = await getSettings(currentUser.id);
         if (settings?.aiProviders) {
             setProviders(settings.aiProviders);
         }
-    };
+    }, [currentUser, getSettings]);
+
+    React.useEffect(() => {
+        if (open && currentUser) {
+            checkAvailability();
+        }
+    }, [open, currentUser, checkAvailability]);
 
     const isAvailable = (model: typeof MODELS[0]) => {
         const config = providers[model.providerId];

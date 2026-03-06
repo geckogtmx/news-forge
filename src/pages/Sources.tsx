@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSources } from '@/hooks/useSources';
 import { useUser } from '@/hooks/useUser';
 import { Button } from '@/components/ui/button';
@@ -34,11 +34,12 @@ export default function Sources() {
   const [sourceToEdit, setSourceToEdit] = useState<any | null>(null);
   const [sourceToDelete, setSourceToDelete] = useState<number | null>(null);
 
-  useEffect(() => {
-    initializeApp();
-  }, []);
+  const loadSources = useCallback(async (uid: number) => {
+    const data = await getSourcesByUser(uid);
+    if (data) setSources(data);
+  }, [getSourcesByUser]);
 
-  const initializeApp = async () => {
+  const initializeApp = useCallback(async () => {
     // 1. Get or create default user
     let user = await getUserById(1);
     if (!user) {
@@ -54,12 +55,11 @@ export default function Sources() {
       setUserId(user.id);
       loadSources(user.id);
     }
-  };
+  }, [getUserById, createUser, loadSources]);
 
-  const loadSources = async (uid: number) => {
-    const data = await getSourcesByUser(uid);
-    if (data) setSources(data);
-  };
+  useEffect(() => {
+    initializeApp();
+  }, [initializeApp]);
 
   const handleSourceAdded = () => {
     setIsAddDialogOpen(false);
