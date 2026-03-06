@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { XMLParser } from 'fast-xml-parser';
 
 export interface ArxivPaper {
@@ -114,7 +115,7 @@ export class ArxivService {
             });
 
         } catch (error) {
-            console.error('Error fetching from ArXiv:', error);
+            log.error('[ArXiv] Error fetching papers:', error);
             throw error;
         }
     }

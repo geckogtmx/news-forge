@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { AIProvider, AIModel, AIRequestOptions, AIResponse } from './providers/base.provider';
 
 export class AIRegistry {
@@ -8,7 +9,7 @@ export class AIRegistry {
 
     registerProvider(provider: AIProvider) {
         this.providers.set(provider.id, provider);
-        console.log(`[AIRegistry] Registered provider: ${provider.id}`);
+        log.info(`[AIRegistry] Registered provider: ${provider.id}`);
     }
 
     getProvider(id: string): AIProvider | undefined {
@@ -29,7 +30,7 @@ export class AIRegistry {
                 const providerModels = await provider.getModels(apiKey);
                 models.push(...providerModels);
             } catch (error) {
-                console.error(`[AIRegistry] Failed to fetch models from ${provider.id}:`, error);
+                log.error(`[AIRegistry] Failed to fetch models from ${provider.id}:`, error);
             }
         }
 

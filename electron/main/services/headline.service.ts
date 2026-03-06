@@ -1,4 +1,4 @@
-import { eq, and, inArray, desc, like, or } from 'drizzle-orm';
+import { eq, and, inArray, desc, like, or, count as sqlCount } from 'drizzle-orm';
 import { db } from '../db';
 import { rawHeadlines, type RawHeadline, type InsertRawHeadline } from '../db/schema';
 
@@ -44,7 +44,6 @@ export class HeadlineService {
             dateTo?: Date;
         }
     ): Promise<RawHeadline[]> {
-        console.log('[HeadlineService.getHeadlinesByRun] Called with runId:', runId, 'filters:', filters);
         let conditions = [eq(rawHeadlines.runId, runId)];
 
         if (filters?.sourceId) {
@@ -56,17 +55,14 @@ export class HeadlineService {
         }
 
         if (filters?.isSelected !== undefined) {
-            console.log('[HeadlineService.getHeadlinesByRun] Adding isSelected filter:', filters.isSelected);
             conditions.push(eq(rawHeadlines.isSelected, filters.isSelected));
         }
 
-        console.log('[HeadlineService.getHeadlinesByRun] Total conditions:', conditions.length);
         const results = await db
             .select()
             .from(rawHeadlines)
             .where(and(...conditions))
             .orderBy(desc(rawHeadlines.publishedAt));
-        console.log('[HeadlineService.getHeadlinesByRun] Query returned', results.length, 'results');
 
         // Filter by date range if provided
         if (filters?.dateFrom || filters?.dateTo) {
@@ -84,20 +80,13 @@ export class HeadlineService {
 
     /**
      * Get selected headlines for a run
-     * Note: Using JS filter as workaround for SQLite boolean filtering issue
      */
     async getSelectedHeadlines(runId: number): Promise<RawHeadline[]> {
-        console.log('[HeadlineService.getSelectedHeadlines] Fetching all headlines for runId:', runId);
-        // Fetch ALL headlines for this run (no isSelected filter)
-        const allHeadlines = await this.getHeadlinesByRun(runId);
-        console.log('[HeadlineService.getSelectedHeadlines] Total headlines:', allHeadlines.length);
-
-        // Filter in JavaScript to avoid SQLite boolean coercion issues
-        // Use Boolean() to handle both true/1 and false/0 correctly
-        const selected = allHeadlines.filter(h => Boolean(h.isSelected));
-        console.log('[HeadlineService.getSelectedHeadlines] Selected headlines:', selected.length);
-
-        return selected;
+        return db
+            .select()
+            .from(rawHeadlines)
+            .where(and(eq(rawHeadlines.runId, runId), eq(rawHeadlines.isSelected, true)))
+            .orderBy(desc(rawHeadlines.publishedAt));
     }
 
     /**
@@ -169,16 +158,22 @@ export class HeadlineService {
      * Count headlines for a run
      */
     async countHeadlinesByRun(runId: number): Promise<number> {
-        const headlines = await this.getHeadlinesByRun(runId);
-        return headlines.length;
+        const result = await db
+            .select({ count: sqlCount() })
+            .from(rawHeadlines)
+            .where(eq(rawHeadlines.runId, runId));
+        return result[0]?.count ?? 0;
     }
 
     /**
      * Count selected headlines for a run
      */
     async countSelectedHeadlines(runId: number): Promise<number> {
-        const selected = await this.getSelectedHeadlines(runId);
-        return selected.length;
+        const result = await db
+            .select({ count: sqlCount() })
+            .from(rawHeadlines)
+            .where(and(eq(rawHeadlines.runId, runId), eq(rawHeadlines.isSelected, true)));
+        return result[0]?.count ?? 0;
     }
 
     /**

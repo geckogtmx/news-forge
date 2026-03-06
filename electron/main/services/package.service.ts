@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { aiRegistry } from './ai/ai.registry';
 import { settingsService } from './settings.service';
 import { compiledItemService } from './compiled.service';
@@ -86,7 +87,7 @@ Format your response as a JSON object:
             }
             content = JSON.parse(clean);
         } catch (e) {
-            console.error("Failed to parse AI response", e);
+            log.error("[ContentPackageService] Failed to parse AI response", e);
             throw new Error("AI response was not valid JSON");
         }
 

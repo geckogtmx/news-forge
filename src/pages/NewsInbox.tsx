@@ -12,15 +12,14 @@ import { toast } from "sonner";
 import { useRuns } from "@/hooks/useRuns";
 import { useHeadlines } from "@/hooks/useHeadlines";
 import type { RawHeadline } from "../../electron/main/db/schema";
-import { useUser } from "@/hooks/useUser";
+import { useUserContext } from "@/contexts/UserContext";
+import { DEFAULT_USER_ID } from "../../electron/shared/constants";
 
 export default function NewsInbox() {
   const { startCollection } = useRuns();
   const { fetchHeadlinesByRun, toggleSelection, bulkSelect } = useHeadlines();
-  // We need to fetch the current user ID properly.
-  // For now, assume userId=1 as per the original mock logic.
-  // Ideally, useAuth() or useUser() should provide this context.
-  const userId = 1;
+  const { currentUser } = useUserContext();
+  const userId = currentUser?.id ?? DEFAULT_USER_ID;
 
   const [runId, setRunId] = useState<number | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);

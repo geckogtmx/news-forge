@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { google, gmail_v1 } from 'googleapis';
 import { OAuth2Client, Credentials } from 'google-auth-library';
 import { shell } from 'electron';
@@ -136,7 +137,7 @@ class GmailService {
     private async startAuthServer(userId: number, onListening?: () => void): Promise<string> {
         // Close any existing server first
         if (this.currentServer) {
-            console.log('Closing existing auth server...');
+            log.info('[Gmail] Closing existing auth server');
             this.currentServer.close();
             this.currentServer = null;
         }
@@ -168,7 +169,7 @@ class GmailService {
                         throw new Error('No code found in callback');
                     }
                 } catch (error) {
-                    console.error('Auth callback error:', error);
+                    log.error('[Gmail] Auth callback error:', error);
                     res.writeHead(500, { 'Content-Type': 'text/html' });
                     res.end('<h1>Authentication failed</h1><p>Please try again.</p>');
                     server.close();
@@ -178,13 +179,13 @@ class GmailService {
             });
 
             server.on('error', (err: any) => {
-                console.error('Auth server error:', err);
+                log.error('[Gmail] Auth server error:', err);
                 this.currentServer = null;
                 reject(err);
             });
 
             server.listen(8089, () => {
-                console.log('Auth server listening on port 8089');
+                log.info('[Gmail] Auth server listening on port 8089');
                 if (onListening) onListening();
             });
 
@@ -193,7 +194,7 @@ class GmailService {
             // Timeout after 5 minutes
             setTimeout(() => {
                 if (server.listening) {
-                    console.log('Auth server timed out, closing.');
+                    log.warn('[Gmail] Auth server timed out, closing');
                     server.close();
                     if (this.currentServer === server) {
                         this.currentServer = null;
@@ -219,13 +220,13 @@ class GmailService {
 
             // Start listening for callback BEFORE opening URL, but pass the readiness callback
             const authPromise = this.startAuthServer(userId, () => {
-                console.log('Server is ready, resolving ready promise');
+                log.info('[Gmail] Auth server ready');
                 serverReadyResolve();
             });
 
             // Wait for server to be LISTENING
             await serverReadyPromise;
-            console.log('Server ready, opening browser:', authUrl);
+            log.info('[Gmail] Opening browser for OAuth authorization');
 
             await shell.openExternal(authUrl);
 
@@ -233,7 +234,7 @@ class GmailService {
             await authPromise;
             return true;
         } catch (error) {
-            console.error('Auth flow failed:', error);
+            log.error('[Gmail] Auth flow failed:', error);
             return false;
         }
     }
@@ -289,7 +290,7 @@ class GmailService {
             await this.storeTokens(userId, updatedTokens);
             return true;
         } catch (error) {
-            console.error('Failed to refresh Gmail tokens:', error);
+            log.error('[Gmail] Failed to refresh tokens:', error);
             return false;
         }
     }
@@ -309,7 +310,7 @@ class GmailService {
             await this.storeTokens(userId, null);
             return true;
         } catch (error) {
-            console.error('Failed to revoke Gmail auth:', error);
+            log.error('[Gmail] Failed to revoke auth:', error);
             // Still clear local tokens even if revoke fails
             await this.storeTokens(userId, null);
             return false;

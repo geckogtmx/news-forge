@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { AIProvider, AIModel, AIRequestOptions, AIResponse } from './base.provider';
 
 export class DeepSeekProvider implements AIProvider {
@@ -89,7 +90,7 @@ export class DeepSeekProvider implements AIProvider {
                 }
             };
         } catch (error) {
-            console.error('DeepSeek generate error:', error);
+            log.error('[DeepSeekProvider] Generate error:', error);
             throw error;
         }
     }

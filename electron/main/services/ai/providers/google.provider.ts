@@ -1,4 +1,5 @@
 
+import log from 'electron-log';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AIProvider, AIModel, AIRequestOptions, AIResponse } from './base.provider';
 
@@ -30,11 +31,12 @@ export class GoogleProvider implements AIProvider {
 
         try {
             if (effectiveKey) {
-                console.log('[GoogleProvider] Fetching dynamic models...');
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${effectiveKey}`);
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+                    headers: { 'x-goog-api-key': effectiveKey }
+                });
                 if (response.ok) {
                     const data = await response.json();
-                    console.log(`[GoogleProvider] Fetched ${data.models?.length || 0} models`);
+                    log.info(`[GoogleProvider] Fetched ${data.models?.length || 0} models`);
 
                     if (data.models && Array.isArray(data.models)) {
                         const dynamicModels = data.models
@@ -88,7 +90,7 @@ export class GoogleProvider implements AIProvider {
                         return dynamicModels;
                     }
                 } else {
-                    console.error(`[GoogleProvider] Failed to fetch models: ${response.status} ${response.statusText}`);
+                    log.error(`[GoogleProvider] Failed to fetch models: ${response.status} ${response.statusText}`);
                     // If fetch fails, we might want to throw or return empty to indicate failure 
                     // rather than falling back to static which might be wrong.
                     // But for robustness, if network fails, static might be better?
@@ -98,10 +100,10 @@ export class GoogleProvider implements AIProvider {
                     return [];
                 }
             } else {
-                console.log('[GoogleProvider] No API key for dynamic fetch');
+                log.info('[GoogleProvider] No API key for dynamic fetch');
             }
         } catch (error) {
-            console.error('[GoogleProvider] Failed to fetch dynamic Gemini models:', error);
+            log.error('[GoogleProvider] Failed to fetch dynamic Gemini models:', error);
             // On error with key, return empty to respect "no faking".
             if (this.apiKey) return [];
         }

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, session } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -28,18 +28,15 @@ let envLoaded = false;
 for (const envPath of possibleEnvPaths) {
   const result = config({ path: envPath });
   if (!result.error) {
-    console.log(`Dotenv loaded successfully from: ${envPath}`);
+    log.info(`Dotenv loaded from: ${envPath}`);
     envLoaded = true;
     break;
   }
 }
 
 if (!envLoaded) {
-  console.error('Failed to load .env file from any expected location.');
+  log.warn('Failed to load .env file from any expected location.');
 }
-
-console.log('Current working directory:', process.cwd());
-console.log('GMAIL_CLIENT_ID status:', process.env.GMAIL_CLIENT_ID ? 'Configured' : 'Missing');
 
 // The built directory structure
 //
@@ -125,10 +122,29 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  // Set Content Security Policy
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          [
+            "default-src 'self'",
+            "script-src 'self'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: https:",
+            "font-src 'self' data:",
+            "connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.anthropic.com https://api.deepseek.com http://localhost:11434 ws://localhost:* http://localhost:* http://127.0.0.1:*",
+          ].join('; ')
+        ],
+      },
+    });
+  });
+
   // Initialize all services (including Gemini)
   await initializeServices();
 
-  // Run migrations (Temporary fix for dev)
+  // Run migrations
   const { runMigrations } = await import('./migrator');
   await runMigrations();
 
@@ -163,8 +179,8 @@ ipcMain.handle('open-win', (_, arg) => {
   const childWindow = new BrowserWindow({
     webPreferences: {
       preload,
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   })
 

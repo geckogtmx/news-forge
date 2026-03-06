@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useContentPackages } from "@/hooks/useContentPackages";
 import { useCompiled } from "@/hooks/useCompiled";
 import { useRuns } from "@/hooks/useRuns";
+import { useUserContext } from "@/contexts/UserContext";
+import { DEFAULT_USER_ID } from "../../electron/shared/constants";
 import type { ContentPackage, CompiledItem } from "../../electron/main/db/schema";
 
 export default function ContentPackagePage() {
@@ -29,6 +31,8 @@ export default function ContentPackagePage() {
   } = useContentPackages();
 
   const { compiledItems, getSelectedCompiledItems } = useCompiled();
+  const { currentUser } = useUserContext();
+  const userId = currentUser?.id ?? DEFAULT_USER_ID;
 
   const [selectedAsset, setSelectedAsset] = useState<ContentPackage | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -125,8 +129,6 @@ export default function ContentPackagePage() {
 
     setRegeneratingIds(prev => new Set(prev).add(id));
     try {
-      // TODO: Get userId from auth context
-      const userId = 1;
       await generatePackageContent(id, userId);
       toast.success("Content generated successfully");
     } catch (error: any) {

@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { AIProvider, AIModel, AIRequestOptions, AIResponse } from './base.provider';
 
 export class OllamaProvider implements AIProvider {
@@ -36,7 +37,7 @@ export class OllamaProvider implements AIProvider {
                 contextWindow: m.details?.context_window || 4096
             }));
         } catch (error) {
-            console.error('Ollama getModels error:', error);
+            log.error('[OllamaProvider] Failed to fetch models:', error);
             return [];
         }
     }
@@ -76,7 +77,7 @@ export class OllamaProvider implements AIProvider {
                 }
             };
         } catch (error) {
-            console.error('Ollama generate error:', error);
+            log.error('[OllamaProvider] Generate error:', error);
             throw error;
         }
     }

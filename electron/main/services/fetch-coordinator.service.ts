@@ -146,7 +146,7 @@ export class FetchCoordinatorService {
         // Emit completion progress
         this.emitProgress(runId, totalSources, totalSources, 'Completed');
 
-        console.log(`[FetchCoordinator] Run ${runId} completed: ${successfulSources}/${totalSources} sources successful, ${totalHeadlines} headlines in ${duration}ms`);
+        log.info(`[FetchCoordinator] Run ${runId} completed: ${successfulSources}/${totalSources} sources successful, ${totalHeadlines} headlines in ${duration}ms`);
 
         return {
             runId,
@@ -169,7 +169,7 @@ export class FetchCoordinatorService {
     private async fetchFromSource(source: NewsSource, runId: number): Promise<SourceResult> {
         const { id: sourceId, name: sourceName, type: sourceType } = source;
 
-        console.log(`[FetchCoordinator] Fetching from source: ${sourceName} (${sourceType})`);
+        log.info(`[FetchCoordinator] Fetching from source: ${sourceName} (${sourceType})`);
 
         // Emit progress for this source
         this.emitProgress(runId, null, null, `Fetching from ${sourceName}...`);
@@ -183,7 +183,7 @@ export class FetchCoordinatorService {
                 await headlineService.createHeadlines(headlines);
             }
 
-            console.log(`[FetchCoordinator] ✓ ${sourceName}: ${headlines.length} headlines`);
+            log.info(`[FetchCoordinator] ${sourceName}: ${headlines.length} headlines fetched`);
 
             return {
                 sourceId,
@@ -194,7 +194,7 @@ export class FetchCoordinatorService {
             };
 
         } catch (error: any) {
-            console.error(`[FetchCoordinator] ✗ ${sourceName} failed:`, error.message);
+            log.error(`[FetchCoordinator] ${sourceName} failed:`, error.message);
 
             return {
                 sourceId,

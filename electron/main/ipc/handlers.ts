@@ -1,485 +1,99 @@
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
+import log from 'electron-log';
 import { IPC_CHANNELS } from '../../shared/ipc-channels';
 import { services } from '../services';
-
-/**
- * IPC Handlers - Main process handlers for all IPC communication
- * 
- * This file registers all IPC handlers that respond to renderer process requests.
- * Each handler wraps service calls with error handling and logging.
- */
+import { DEFAULT_USER_ID } from '../../shared/constants';
 
 /**
  * Generic error handler for IPC calls
  */
-function handleIpcError(channel: string, error: any) {
-    console.error(`[IPC Error] ${channel}:`, error);
-    return {
-        success: false,
-        error: error.message || 'An unknown error occurred',
-    };
+function handleIpcError(channel: string, error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    log.error(`[IPC Error] ${channel}:`, error);
+    return { success: false, error: message };
+}
+
+/**
+ * Factory function to create standardized IPC handlers.
+ * Wraps service calls with consistent error handling and response format.
+ */
+function createHandler<TArgs extends unknown[], TResult>(
+    channel: string,
+    handler: (...args: TArgs) => Promise<TResult> | TResult
+) {
+    ipcMain.handle(channel, async (_event: IpcMainInvokeEvent, ...args: TArgs) => {
+        try {
+            const result = await handler(...args);
+            return { success: true, data: result };
+        } catch (error) {
+            return handleIpcError(channel, error);
+        }
+    });
 }
 
 /**
  * Register all IPC handlers
  */
 export function registerIpcHandlers() {
-    // ============================================================
-    // USER HANDLERS
-    // ============================================================
+    // ========== USER ==========
+    createHandler(IPC_CHANNELS.USER.CREATE, (data: any) => services.user.createUser(data));
+    createHandler(IPC_CHANNELS.USER.GET_BY_ID, (id: number) => services.user.getUserById(id));
+    createHandler(IPC_CHANNELS.USER.GET_BY_EMAIL, (email: string) => services.user.getUserByEmail(email));
+    createHandler(IPC_CHANNELS.USER.GET_BY_OPEN_ID, (openId: string) => services.user.getUserByOpenId(openId));
+    createHandler(IPC_CHANNELS.USER.UPDATE, (id: number, data: any) => services.user.updateUser(id, data));
+    createHandler(IPC_CHANNELS.USER.DELETE, (id: number) => services.user.deleteUser(id));
+    createHandler(IPC_CHANNELS.USER.GET_ALL, () => services.user.getAllUsers());
+    createHandler(IPC_CHANNELS.USER.UPDATE_LAST_SIGNED_IN, (id: number) => services.user.updateLastSignedIn(id));
 
-    ipcMain.handle(IPC_CHANNELS.USER.CREATE, async (_event, data) => {
-        try {
-            const user = await services.user.createUser(data);
-            return { success: true, data: user };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.USER.CREATE, error);
-        }
-    });
+    // ========== NEWS SOURCE ==========
+    createHandler(IPC_CHANNELS.SOURCE.CREATE, (data: any) => services.newsSource.createSource(data));
+    createHandler(IPC_CHANNELS.SOURCE.GET_BY_ID, (id: number) => services.newsSource.getSourceById(id));
+    createHandler(IPC_CHANNELS.SOURCE.GET_BY_USER, (userId: number) => services.newsSource.getSourcesByUser(userId));
+    createHandler(IPC_CHANNELS.SOURCE.GET_ACTIVE_BY_USER, (userId: number) => services.newsSource.getActiveSourcesByUser(userId));
+    createHandler(IPC_CHANNELS.SOURCE.GET_BY_TYPE, (userId: number, type: any) => services.newsSource.getSourcesByType(userId, type));
+    createHandler(IPC_CHANNELS.SOURCE.UPDATE, (id: number, data: any) => services.newsSource.updateSource(id, data));
+    createHandler(IPC_CHANNELS.SOURCE.TOGGLE_ACTIVE, (id: number, isActive: boolean) => services.newsSource.toggleSourceActive(id, isActive));
+    createHandler(IPC_CHANNELS.SOURCE.DELETE, (id: number) => services.newsSource.deleteSource(id));
+    createHandler(IPC_CHANNELS.SOURCE.BULK_TOGGLE, (ids: number[], isActive: boolean) => services.newsSource.bulkToggleSources(ids, isActive));
+    createHandler(IPC_CHANNELS.SOURCE.VALIDATE_CONFIG, (type: any, config: any) => services.newsSource.validateSourceConfig(type, config));
 
-    ipcMain.handle(IPC_CHANNELS.USER.GET_BY_ID, async (_event, id: number) => {
-        try {
-            const user = await services.user.getUserById(id);
-            return { success: true, data: user };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.USER.GET_BY_ID, error);
-        }
-    });
+    // ========== RUN ==========
+    createHandler(IPC_CHANNELS.RUN.CREATE, (userId: number, stats?: any) => services.run.createRun(userId, stats));
+    createHandler(IPC_CHANNELS.RUN.GET_BY_ID, (id: number) => services.run.getRunById(id));
+    createHandler(IPC_CHANNELS.RUN.GET_BY_USER, (userId: number, limit?: number, offset?: number) => services.run.getRunsByUser(userId, limit, offset));
+    createHandler(IPC_CHANNELS.RUN.GET_BY_STATUS, (userId: number, status: any) => services.run.getRunsByStatus(userId, status));
+    createHandler(IPC_CHANNELS.RUN.GET_LATEST, (userId: number) => services.run.getLatestRun(userId));
+    createHandler(IPC_CHANNELS.RUN.UPDATE_STATUS, (id: number, status: any) => services.run.updateRunStatus(id, status));
+    createHandler(IPC_CHANNELS.RUN.UPDATE_STATS, (id: number, stats: any) => services.run.updateRunStats(id, stats));
+    createHandler(IPC_CHANNELS.RUN.COMPLETE, (id: number, finalStats?: any) => services.run.completeRun(id, finalStats));
+    createHandler(IPC_CHANNELS.RUN.FAIL, (id: number, errorMsg: string) => services.run.failRun(id, errorMsg));
+    createHandler(IPC_CHANNELS.RUN.GET_STATISTICS, (id: number) => services.run.getRunStatistics(id));
+    createHandler(IPC_CHANNELS.RUN.DELETE, (id: number) => services.run.deleteRun(id));
 
-    ipcMain.handle(IPC_CHANNELS.USER.GET_BY_EMAIL, async (_event, email: string) => {
-        try {
-            const user = await services.user.getUserByEmail(email);
-            return { success: true, data: user };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.USER.GET_BY_EMAIL, error);
-        }
-    });
+    // ========== HEADLINE ==========
+    createHandler(IPC_CHANNELS.HEADLINE.CREATE, (data: any) => services.headline.createHeadline(data));
+    createHandler(IPC_CHANNELS.HEADLINE.CREATE_BULK, (headlines: any[]) => services.headline.createHeadlines(headlines));
+    createHandler(IPC_CHANNELS.HEADLINE.GET_BY_ID, (id: number) => services.headline.getHeadlineById(id));
+    createHandler(IPC_CHANNELS.HEADLINE.GET_BY_RUN, (runId: number, filters?: any) => services.headline.getHeadlinesByRun(runId, filters));
+    createHandler(IPC_CHANNELS.HEADLINE.GET_SELECTED, (runId: number) => services.headline.getSelectedHeadlines(runId));
+    createHandler(IPC_CHANNELS.HEADLINE.TOGGLE_SELECTION, (id: number, selected: boolean) => services.headline.toggleHeadlineSelection(id, selected));
+    createHandler(IPC_CHANNELS.HEADLINE.BULK_SELECT, (ids: number[], selected: boolean) => services.headline.bulkSelectHeadlines(ids, selected));
+    createHandler(IPC_CHANNELS.HEADLINE.SEARCH, (runId: number, query: string) => services.headline.searchHeadlines(runId, query));
+    createHandler(IPC_CHANNELS.HEADLINE.DELETE, (ids: number[]) => services.headline.deleteHeadlines(ids));
+    createHandler(IPC_CHANNELS.HEADLINE.GET_BY_IDS, (ids: number[]) => services.headline.getHeadlinesByIds(ids));
 
-    ipcMain.handle(IPC_CHANNELS.USER.GET_BY_OPEN_ID, async (_event, openId: string) => {
-        try {
-            const user = await services.user.getUserByOpenId(openId);
-            return { success: true, data: user };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.USER.GET_BY_OPEN_ID, error);
-        }
-    });
+    // ========== COMPILED ITEMS ==========
+    createHandler(IPC_CHANNELS.COMPILED.CREATE, (data: any) => services.compiledItem.createCompiledItem(data));
+    createHandler(IPC_CHANNELS.COMPILED.CREATE_BULK, (items: any[]) => services.compiledItem.bulkCreateCompiledItems(items));
+    createHandler(IPC_CHANNELS.COMPILED.GET_BY_ID, (id: number) => services.compiledItem.getCompiledItemById(id));
+    createHandler(IPC_CHANNELS.COMPILED.GET_BY_RUN, (runId: number) => services.compiledItem.getCompiledItemsByRun(runId));
+    createHandler(IPC_CHANNELS.COMPILED.GET_SELECTED, (runId: number) => services.compiledItem.getSelectedCompiledItems(runId));
+    createHandler(IPC_CHANNELS.COMPILED.UPDATE, (id: number, data: any) => services.compiledItem.updateCompiledItem(id, data));
+    createHandler(IPC_CHANNELS.COMPILED.TOGGLE_SELECTION, (id: number, selected: boolean) => services.compiledItem.toggleSelection(id, selected));
+    createHandler(IPC_CHANNELS.COMPILED.DELETE, (id: number) => services.compiledItem.deleteCompiledItem(id));
+    createHandler(IPC_CHANNELS.COMPILED.SEARCH, (runId: number, query: string) => services.compiledItem.searchCompiledItems(runId, query));
 
-    ipcMain.handle(IPC_CHANNELS.USER.UPDATE, async (_event, id: number, data: any) => {
-        try {
-            const user = await services.user.updateUser(id, data);
-            return { success: true, data: user };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.USER.UPDATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.USER.DELETE, async (_event, id: number) => {
-        try {
-            const result = await services.user.deleteUser(id);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.USER.DELETE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.USER.GET_ALL, async () => {
-        try {
-            const users = await services.user.getAllUsers();
-            return { success: true, data: users };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.USER.GET_ALL, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.USER.UPDATE_LAST_SIGNED_IN, async (_event, id: number) => {
-        try {
-            const user = await services.user.updateLastSignedIn(id);
-            return { success: true, data: user };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.USER.UPDATE_LAST_SIGNED_IN, error);
-        }
-    });
-
-    // ============================================================
-    // NEWS SOURCE HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.CREATE, async (_event, data) => {
-        try {
-            const source = await services.newsSource.createSource(data);
-            return { success: true, data: source };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.CREATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.GET_BY_ID, async (_event, id: number) => {
-        try {
-            const source = await services.newsSource.getSourceById(id);
-            return { success: true, data: source };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.GET_BY_ID, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.GET_BY_USER, async (_event, userId: number) => {
-        try {
-            const sources = await services.newsSource.getSourcesByUser(userId);
-            return { success: true, data: sources };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.GET_BY_USER, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.GET_ACTIVE_BY_USER, async (_event, userId: number) => {
-        try {
-            const sources = await services.newsSource.getActiveSourcesByUser(userId);
-            return { success: true, data: sources };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.GET_ACTIVE_BY_USER, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.GET_BY_TYPE, async (_event, userId: number, type: any) => {
-        try {
-            const sources = await services.newsSource.getSourcesByType(userId, type);
-            return { success: true, data: sources };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.GET_BY_TYPE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.UPDATE, async (_event, id: number, data: any) => {
-        try {
-            const source = await services.newsSource.updateSource(id, data);
-            return { success: true, data: source };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.UPDATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.TOGGLE_ACTIVE, async (_event, id: number, isActive: boolean) => {
-        try {
-            const source = await services.newsSource.toggleSourceActive(id, isActive);
-            return { success: true, data: source };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.TOGGLE_ACTIVE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.DELETE, async (_event, id: number) => {
-        try {
-            const result = await services.newsSource.deleteSource(id);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.DELETE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.BULK_TOGGLE, async (_event, ids: number[], isActive: boolean) => {
-        try {
-            const count = await services.newsSource.bulkToggleSources(ids, isActive);
-            return { success: true, data: count };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.BULK_TOGGLE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SOURCE.VALIDATE_CONFIG, async (_event, type: any, config: any) => {
-        try {
-            const result = services.newsSource.validateSourceConfig(type, config);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SOURCE.VALIDATE_CONFIG, error);
-        }
-    });
-
-    // ============================================================
-    // RUN HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.RUN.CREATE, async (_event, userId: number, stats?: any) => {
-        try {
-            const run = await services.run.createRun(userId, stats);
-            return { success: true, data: run };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.CREATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.GET_BY_ID, async (_event, id: number) => {
-        try {
-            const run = await services.run.getRunById(id);
-            return { success: true, data: run };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.GET_BY_ID, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.GET_BY_USER, async (_event, userId: number, limit?: number, offset?: number) => {
-        try {
-            const runs = await services.run.getRunsByUser(userId, limit, offset);
-            return { success: true, data: runs };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.GET_BY_USER, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.GET_BY_STATUS, async (_event, userId: number, status: any) => {
-        try {
-            const runs = await services.run.getRunsByStatus(userId, status);
-            return { success: true, data: runs };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.GET_BY_STATUS, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.GET_LATEST, async (_event, userId: number) => {
-        try {
-            const run = await services.run.getLatestRun(userId);
-            return { success: true, data: run };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.GET_LATEST, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.UPDATE_STATUS, async (_event, id: number, status: any) => {
-        try {
-            const run = await services.run.updateRunStatus(id, status);
-            return { success: true, data: run };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.UPDATE_STATUS, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.UPDATE_STATS, async (_event, id: number, stats: any) => {
-        try {
-            const run = await services.run.updateRunStats(id, stats);
-            return { success: true, data: run };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.UPDATE_STATS, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.COMPLETE, async (_event, id: number, finalStats?: any) => {
-        try {
-            const run = await services.run.completeRun(id, finalStats);
-            return { success: true, data: run };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.COMPLETE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.FAIL, async (_event, id: number, error: string) => {
-        try {
-            const run = await services.run.failRun(id, error);
-            return { success: true, data: run };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.FAIL, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.GET_STATISTICS, async (_event, id: number) => {
-        try {
-            const stats = await services.run.getRunStatistics(id);
-            return { success: true, data: stats };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.GET_STATISTICS, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RUN.DELETE, async (_event, id: number) => {
-        try {
-            const result = await services.run.deleteRun(id);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RUN.DELETE, error);
-        }
-    });
-
-    // ============================================================
-    // HEADLINE HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.CREATE, async (_event, data) => {
-        try {
-            const headline = await services.headline.createHeadline(data);
-            return { success: true, data: headline };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.CREATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.CREATE_BULK, async (_event, headlines: any[]) => {
-        try {
-            const result = await services.headline.createHeadlines(headlines);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.CREATE_BULK, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.GET_BY_ID, async (_event, id: number) => {
-        try {
-            const headline = await services.headline.getHeadlineById(id);
-            return { success: true, data: headline };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.GET_BY_ID, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.GET_BY_RUN, async (_event, runId: number, filters?: any) => {
-        try {
-            console.log(`[IPC ${IPC_CHANNELS.HEADLINE.GET_BY_RUN}] Called with runId:`, runId, 'filters:', filters);
-            const headlines = await services.headline.getHeadlinesByRun(runId, filters);
-            console.log(`[IPC ${IPC_CHANNELS.HEADLINE.GET_BY_RUN}] Returning ${headlines.length} headlines`);
-            return { success: true, data: headlines };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.GET_BY_RUN, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.GET_SELECTED, async (_event, runId: number) => {
-        try {
-            console.log(`[IPC ${IPC_CHANNELS.HEADLINE.GET_SELECTED}] Called with runId:`, runId);
-            const headlines = await services.headline.getSelectedHeadlines(runId);
-            console.log(`[IPC ${IPC_CHANNELS.HEADLINE.GET_SELECTED}] Returning ${headlines.length} headlines`);
-            return { success: true, data: headlines };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.GET_SELECTED, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.TOGGLE_SELECTION, async (_event, id: number, selected: boolean) => {
-        try {
-            const headline = await services.headline.toggleHeadlineSelection(id, selected);
-            return { success: true, data: headline };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.TOGGLE_SELECTION, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.BULK_SELECT, async (_event, ids: number[], selected: boolean) => {
-        try {
-            const count = await services.headline.bulkSelectHeadlines(ids, selected);
-            return { success: true, data: count };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.BULK_SELECT, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.SEARCH, async (_event, runId: number, query: string) => {
-        try {
-            const headlines = await services.headline.searchHeadlines(runId, query);
-            return { success: true, data: headlines };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.SEARCH, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.DELETE, async (_event, ids: number[]) => {
-        try {
-            const count = await services.headline.deleteHeadlines(ids);
-            return { success: true, data: count };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.DELETE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.HEADLINE.GET_BY_IDS, async (_event, ids: number[]) => {
-        try {
-            const headlines = await services.headline.getHeadlinesByIds(ids);
-            return { success: true, data: headlines };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.HEADLINE.GET_BY_IDS, error);
-        }
-    });
-
-    // ============================================================
-    // COMPILED ITEM HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.CREATE, async (_event, data) => {
-        try {
-            const item = await services.compiledItem.createCompiledItem(data);
-            return { success: true, data: item };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.CREATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.CREATE_BULK, async (_event, items: any[]) => {
-        try {
-            const result = await services.compiledItem.bulkCreateCompiledItems(items);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.CREATE_BULK, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.GET_BY_ID, async (_event, id: number) => {
-        try {
-            const item = await services.compiledItem.getCompiledItemById(id);
-            return { success: true, data: item };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.GET_BY_ID, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.GET_BY_RUN, async (_event, runId: number) => {
-        try {
-            const items = await services.compiledItem.getCompiledItemsByRun(runId);
-            return { success: true, data: items };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.GET_BY_RUN, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.GET_SELECTED, async (_event, runId: number) => {
-        try {
-            const items = await services.compiledItem.getSelectedCompiledItems(runId);
-            return { success: true, data: items };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.GET_SELECTED, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.UPDATE, async (_event, id: number, data: any) => {
-        try {
-            const item = await services.compiledItem.updateCompiledItem(id, data);
-            return { success: true, data: item };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.UPDATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.TOGGLE_SELECTION, async (_event, id: number, selected: boolean) => {
-        try {
-            const item = await services.compiledItem.toggleSelection(id, selected);
-            return { success: true, data: item };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.TOGGLE_SELECTION, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.DELETE, async (_event, id: number) => {
-        try {
-            const result = await services.compiledItem.deleteCompiledItem(id);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.DELETE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.COMPILED.SEARCH, async (_event, runId: number, query: string) => {
-        try {
-            const items = await services.compiledItem.searchCompiledItems(runId, query);
-            return { success: true, data: items };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILED.SEARCH, error);
-        }
-    });
-
+    // COMPILED.GET_RELATED_HEADLINES needs custom logic (two service calls)
     ipcMain.handle(IPC_CHANNELS.COMPILED.GET_RELATED_HEADLINES, async (_event, id: number) => {
         try {
             const headlineIds = await services.compiledItem.getRelatedHeadlineIds(id);
@@ -490,569 +104,76 @@ export function registerIpcHandlers() {
         }
     });
 
-    // ============================================================
-    // CONTENT PACKAGE HANDLERS
-    // ============================================================
+    // ========== CONTENT PACKAGES ==========
+    createHandler(IPC_CHANNELS.PACKAGE.CREATE, (data: any) => services.contentPackage.createPackage(data));
+    createHandler(IPC_CHANNELS.PACKAGE.CREATE_BULK, (packages: any[]) => services.contentPackage.bulkCreatePackages(packages));
+    createHandler(IPC_CHANNELS.PACKAGE.GET_BY_ID, (id: number) => services.contentPackage.getPackageById(id));
+    createHandler(IPC_CHANNELS.PACKAGE.GET_BY_RUN, (runId: number) => services.contentPackage.getPackagesByRun(runId));
+    createHandler(IPC_CHANNELS.PACKAGE.GET_BY_COMPILED_ITEM, (compiledItemId: number) => services.contentPackage.getPackageByCompiledItem(compiledItemId));
+    createHandler(IPC_CHANNELS.PACKAGE.GET_BY_STATUS, (runId: number, status: any) => services.contentPackage.getPackagesByStatus(runId, status));
+    createHandler(IPC_CHANNELS.PACKAGE.UPDATE, (id: number, data: any) => services.contentPackage.updatePackage(id, data));
+    createHandler(IPC_CHANNELS.PACKAGE.UPDATE_CONTENT, (id: number, content: any) => services.contentPackage.updatePackageContent(id, content));
+    createHandler(IPC_CHANNELS.PACKAGE.MARK_EXPORTED, (id: number) => services.contentPackage.markPackageExported(id));
+    createHandler(IPC_CHANNELS.PACKAGE.MARK_READY, (id: number) => services.contentPackage.markPackageReady(id));
+    createHandler(IPC_CHANNELS.PACKAGE.DELETE, (id: number) => services.contentPackage.deletePackage(id));
+    createHandler(IPC_CHANNELS.PACKAGE.GENERATE, (packageId: number, userId: number, modelId?: string, providerId?: string) =>
+        services.contentPackage.generatePackageContent(packageId, userId, modelId, providerId));
 
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.CREATE, async (_event, data) => {
-        try {
-            const pkg = await services.contentPackage.createPackage(data);
-            return { success: true, data: pkg };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.CREATE, error);
-        }
-    });
+    // ========== ARCHIVE ==========
+    createHandler(IPC_CHANNELS.ARCHIVE.CREATE, (data: any) => services.archive.createArchive(data));
+    createHandler(IPC_CHANNELS.ARCHIVE.GET_BY_ID, (id: number) => services.archive.getArchiveById(id));
+    createHandler(IPC_CHANNELS.ARCHIVE.GET_BY_USER, (userId: number) => services.archive.getArchivesByUser(userId));
+    createHandler(IPC_CHANNELS.ARCHIVE.GET_BY_RUN, (runId: number) => services.archive.getArchiveByRun(runId));
+    createHandler(IPC_CHANNELS.ARCHIVE.UPDATE, (id: number, data: any) => services.archive.updateArchive(id, data));
+    createHandler(IPC_CHANNELS.ARCHIVE.UPDATE_OBSIDIAN_PATH, (id: number, obsidianPath: string) => services.archive.updateObsidianPath(id, obsidianPath));
+    createHandler(IPC_CHANNELS.ARCHIVE.DELETE, (id: number) => services.archive.deleteArchive(id));
+    createHandler(IPC_CHANNELS.ARCHIVE.GET_RECENT, (userId: number, limit?: number) => services.archive.getRecentArchives(userId, limit));
 
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.CREATE_BULK, async (_event, packages: any[]) => {
-        try {
-            const result = await services.contentPackage.bulkCreatePackages(packages);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.CREATE_BULK, error);
-        }
-    });
+    // ========== SETTINGS ==========
+    createHandler(IPC_CHANNELS.SETTINGS.GET, (userId: number) => services.settings.getSettings(userId));
+    createHandler(IPC_CHANNELS.SETTINGS.UPDATE, (userId: number, data: any) => services.settings.updateSettings(userId, data));
+    createHandler(IPC_CHANNELS.SETTINGS.UPDATE_OBSIDIAN_PATH, (userId: number, path: string) => services.settings.updateObsidianPath(userId, path));
+    createHandler(IPC_CHANNELS.SETTINGS.UPDATE_MODEL, (userId: number, model: string) => services.settings.updateDefaultModel(userId, model));
+    createHandler(IPC_CHANNELS.SETTINGS.UPDATE_TONE, (userId: number, tone: string) => services.settings.updateTone(userId, tone));
+    createHandler(IPC_CHANNELS.SETTINGS.UPDATE_FORMAT, (userId: number, format: any) => services.settings.updateFormat(userId, format));
+    createHandler(IPC_CHANNELS.SETTINGS.RESET, (userId: number) => services.settings.resetSettings(userId));
+    createHandler(IPC_CHANNELS.SETTINGS.UPDATE_AI_PROVIDER, (userId: number, providerId: string, config: any) =>
+        services.settings.updateAIProvider(userId, providerId, config));
 
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.GET_BY_ID, async (_event, id: number) => {
-        try {
-            const pkg = await services.contentPackage.getPackageById(id);
-            return { success: true, data: pkg };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.GET_BY_ID, error);
-        }
-    });
+    // ========== RSS ==========
+    createHandler(IPC_CHANNELS.RSS.FETCH_FEED, (url: string) => services.rss.fetchFeed(url));
+    createHandler(IPC_CHANNELS.RSS.DISCOVER_FEEDS, (websiteUrl: string) => services.rss.discoverFeeds(websiteUrl));
+    createHandler(IPC_CHANNELS.RSS.VALIDATE_FEED, (url: string) => services.rss.validateFeed(url));
 
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.GET_BY_RUN, async (_event, runId: number) => {
-        try {
-            const packages = await services.contentPackage.getPackagesByRun(runId);
-            return { success: true, data: packages };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.GET_BY_RUN, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.GET_BY_COMPILED_ITEM, async (_event, compiledItemId: number) => {
-        try {
-            const pkg = await services.contentPackage.getPackageByCompiledItem(compiledItemId);
-            return { success: true, data: pkg };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.GET_BY_COMPILED_ITEM, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.GET_BY_STATUS, async (_event, runId: number, status: any) => {
-        try {
-            const packages = await services.contentPackage.getPackagesByStatus(runId, status);
-            return { success: true, data: packages };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.GET_BY_STATUS, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.UPDATE, async (_event, id: number, data: any) => {
-        try {
-            const pkg = await services.contentPackage.updatePackage(id, data);
-            return { success: true, data: pkg };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.UPDATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.UPDATE_CONTENT, async (_event, id: number, content: any) => {
-        try {
-            const pkg = await services.contentPackage.updatePackageContent(id, content);
-            return { success: true, data: pkg };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.UPDATE_CONTENT, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.MARK_EXPORTED, async (_event, id: number) => {
-        try {
-            const pkg = await services.contentPackage.markPackageExported(id);
-            return { success: true, data: pkg };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.MARK_EXPORTED, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.MARK_READY, async (_event, id: number) => {
-        try {
-            const pkg = await services.contentPackage.markPackageReady(id);
-            return { success: true, data: pkg };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.MARK_READY, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.DELETE, async (_event, id: number) => {
-        try {
-            const result = await services.contentPackage.deletePackage(id);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.DELETE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.PACKAGE.GENERATE, async (_event, packageId: number, userId: number, modelId?: string, providerId?: string) => {
-        try {
-            const result = await services.contentPackage.generatePackageContent(packageId, userId, modelId, providerId);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.PACKAGE.GENERATE, error);
-        }
-    });
-
-    // ============================================================
-    // ARCHIVE HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.ARCHIVE.CREATE, async (_event, data) => {
-        try {
-            const archive = await services.archive.createArchive(data);
-            return { success: true, data: archive };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.ARCHIVE.CREATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.ARCHIVE.GET_BY_ID, async (_event, id: number) => {
-        try {
-            const archive = await services.archive.getArchiveById(id);
-            return { success: true, data: archive };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.ARCHIVE.GET_BY_ID, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.ARCHIVE.GET_BY_USER, async (_event, userId: number) => {
-        try {
-            const archives = await services.archive.getArchivesByUser(userId);
-            return { success: true, data: archives };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.ARCHIVE.GET_BY_USER, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.ARCHIVE.GET_BY_RUN, async (_event, runId: number) => {
-        try {
-            const archive = await services.archive.getArchiveByRun(runId);
-            return { success: true, data: archive };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.ARCHIVE.GET_BY_RUN, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.ARCHIVE.UPDATE, async (_event, id: number, data: any) => {
-        try {
-            const archive = await services.archive.updateArchive(id, data);
-            return { success: true, data: archive };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.ARCHIVE.UPDATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.ARCHIVE.UPDATE_OBSIDIAN_PATH, async (_event, id: number, path: string) => {
-        try {
-            const archive = await services.archive.updateObsidianPath(id, path);
-            return { success: true, data: archive };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.ARCHIVE.UPDATE_OBSIDIAN_PATH, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.ARCHIVE.DELETE, async (_event, id: number) => {
-        try {
-            const result = await services.archive.deleteArchive(id);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.ARCHIVE.DELETE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.ARCHIVE.GET_RECENT, async (_event, userId: number, limit?: number) => {
-        try {
-            const archives = await services.archive.getRecentArchives(userId, limit);
-            return { success: true, data: archives };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.ARCHIVE.GET_RECENT, error);
-        }
-    });
-
-    // ============================================================
-    // SETTINGS HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.SETTINGS.GET, async (_event, userId: number) => {
-        try {
-            const settings = await services.settings.getSettings(userId);
-            return { success: true, data: settings };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SETTINGS.GET, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SETTINGS.UPDATE, async (_event, userId: number, data: any) => {
-        try {
-            const settings = await services.settings.updateSettings(userId, data);
-            return { success: true, data: settings };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SETTINGS.UPDATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SETTINGS.UPDATE_OBSIDIAN_PATH, async (_event, userId: number, path: string) => {
-        try {
-            const settings = await services.settings.updateObsidianPath(userId, path);
-            return { success: true, data: settings };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SETTINGS.UPDATE_OBSIDIAN_PATH, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SETTINGS.UPDATE_MODEL, async (_event, userId: number, model: string) => {
-        try {
-            const settings = await services.settings.updateDefaultModel(userId, model);
-            return { success: true, data: settings };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SETTINGS.UPDATE_MODEL, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SETTINGS.UPDATE_TONE, async (_event, userId: number, tone: string) => {
-        try {
-            const settings = await services.settings.updateTone(userId, tone);
-            return { success: true, data: settings };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SETTINGS.UPDATE_TONE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SETTINGS.UPDATE_FORMAT, async (_event, userId: number, format: any) => {
-        try {
-            const settings = await services.settings.updateFormat(userId, format);
-            return { success: true, data: settings };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SETTINGS.UPDATE_FORMAT, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SETTINGS.RESET, async (_event, userId: number) => {
-        try {
-            const settings = await services.settings.resetSettings(userId);
-            return { success: true, data: settings };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SETTINGS.RESET, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SETTINGS.UPDATE_AI_PROVIDER, async (_event, userId: number, providerId: string, config: any) => {
-        try {
-            const settings = await services.settings.updateAIProvider(userId, providerId, config);
-            return { success: true, data: settings };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.SETTINGS.UPDATE_AI_PROVIDER, error);
-        }
-    });
-
-    // ============================================================
-    // RSS HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.RSS.FETCH_FEED, async (_event, url: string) => {
-        try {
-            const feed = await services.rss.fetchFeed(url);
-            return { success: true, data: feed };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RSS.FETCH_FEED, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RSS.DISCOVER_FEEDS, async (_event, websiteUrl: string) => {
-        try {
-            const feeds = await services.rss.discoverFeeds(websiteUrl);
-            return { success: true, data: feeds };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RSS.DISCOVER_FEEDS, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.RSS.VALIDATE_FEED, async (_event, url: string) => {
-        try {
-            const result = await services.rss.validateFeed(url);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.RSS.VALIDATE_FEED, error);
-        }
-    });
-
+    // RSS.PREVIEW_FEED needs custom logic (slice items)
     ipcMain.handle(IPC_CHANNELS.RSS.PREVIEW_FEED, async (_event, url: string) => {
         try {
             const feed = await services.rss.fetchFeed(url);
-            // Return only first 5 items for preview
-            const preview = {
-                ...feed,
-                items: feed.items.slice(0, 5),
-            };
-            return { success: true, data: preview };
+            return { success: true, data: { ...feed, items: feed.items.slice(0, 5) } };
         } catch (error) {
             return handleIpcError(IPC_CHANNELS.RSS.PREVIEW_FEED, error);
         }
     });
 
-    // ============================================================
-    // GMAIL HANDLERS
-    // ============================================================
+    // ========== GMAIL ==========
+    createHandler(IPC_CHANNELS.GMAIL.IS_CONFIGURED, () => services.gmail.isConfigured());
+    createHandler(IPC_CHANNELS.GMAIL.IS_AUTHENTICATED, (userId: number) => services.gmail.isAuthenticated(userId));
+    createHandler(IPC_CHANNELS.GMAIL.GET_AUTH_URL, () => services.gmail.getAuthUrl());
+    createHandler(IPC_CHANNELS.GMAIL.OPEN_AUTH_URL, (userId: number) => services.gmail.openAuthUrl(userId));
+    createHandler(IPC_CHANNELS.GMAIL.HANDLE_CALLBACK, (code: string, userId: number) => services.gmail.handleAuthCallback(code, userId));
+    createHandler(IPC_CHANNELS.GMAIL.REVOKE_AUTH, (userId: number) => services.gmail.revokeAuth(userId));
+    createHandler(IPC_CHANNELS.GMAIL.FETCH_NEWSLETTERS, (userId: number, filters: any) => services.gmail.fetchNewsletters(userId, filters));
+    createHandler(IPC_CHANNELS.GMAIL.GET_LABELS, (userId: number) => services.gmail.getLabels(userId));
+    createHandler(IPC_CHANNELS.GMAIL.TEST_CONNECTION, (userId: number, filters: any) => services.gmail.testConnection(userId, filters));
+    createHandler(IPC_CHANNELS.GMAIL.EXTRACT_HEADLINES, (emails: any[]) => services.gmail.extractHeadlines(emails));
 
-    ipcMain.handle(IPC_CHANNELS.GMAIL.IS_CONFIGURED, async () => {
-        try {
-            const isConfigured = services.gmail.isConfigured();
-            return { success: true, data: isConfigured };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.IS_CONFIGURED, error);
-        }
-    });
+    // ========== YOUTUBE ==========
+    createHandler(IPC_CHANNELS.YOUTUBE.VALIDATE_URL, (url: string) => services.youtube.isValidYoutubeUrl(url));
+    createHandler(IPC_CHANNELS.YOUTUBE.EXTRACT_VIDEO_ID, (url: string) => services.youtube.extractVideoId(url));
+    createHandler(IPC_CHANNELS.YOUTUBE.FETCH_VIDEO, (url: string) => services.youtube.fetchVideoMetadata(url));
+    createHandler(IPC_CHANNELS.YOUTUBE.PREVIEW_VIDEO, (url: string) => services.youtube.previewVideo(url));
 
-    ipcMain.handle(IPC_CHANNELS.GMAIL.IS_AUTHENTICATED, async (_event, userId: number) => {
-        try {
-            const isAuthenticated = await services.gmail.isAuthenticated(userId);
-            return { success: true, data: isAuthenticated };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.IS_AUTHENTICATED, error);
-        }
-    });
-
-    // ============================================================
-    // AI HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.AI.GET_MODELS, async (_event, providerId?: string) => {
-        try {
-            // We need to fetch settings to get API keys for dynamic providers (e.g. Google)
-            // Assuming single user for now or simple context - but we don't have userId in GET_MODELS args?
-            // Wait, front-end calls `invoke(IPC_CHANNELS.AI.GET_MODELS)`. It usually doesn't pass args.
-            // But we need userId to get settings!
-            // Temporary workaround: Grab the first user or default.
-            // Better: update useAI to pass userId.
-            // checking useAI.ts step 675: `invoke(IPC_CHANNELS.AI.GET_MODELS)` - NO ARGS.
-
-            // However, handlers.ts usually expects userId for context-aware stuff.
-            // Let's peek at how `getSecureSettings` works. It generally requires an ID.
-            // If we don't have it, we can't get keys.
-            // BUT, `useSettings` hook uses `currentUser.id`.
-
-            // I should technically update `useAI` to pass `userId`.
-            // But for now, let's see if we can get it from the sender? No.
-
-            // Let's assume User ID 1 for single-user desktop app context if unavailable,
-            // OR fetch all users and pick one.
-            // Actually, let's update `useAI` to pass current user ID.
-            // But that requires another frontend change.
-            // Can we get settings without ID? `settingsService.getSettings(id)`
-
-            // Quick fix: Fetch the most recently active user?
-            // Or just hardcode logic to find a user.
-
-            // Wait! The USER reported "No API key for dynamic fetch".
-            // If I fix this handler, I need `userId`.
-
-            // Let's look at `AI.GENERATE` - it receives `userId`.
-            // So `AI.GET_MODELS` should too.
-            // I will update `handlers.ts` to expect `userId` as first arg.
-            // And I will update `useAI.ts` to pass it.
-
-            // WAIT - I need to modify `useAI` first or simultaneous.
-            // If I change handler signature, old `useAI` will fail (args mismatch).
-            // Actually `handle` receives `(event, ...args)`.
-            // If I add `userId` arg, I need to send it.
-
-            // Let's update handler to OPTIONALLY take userId, and try to find a default if missing.
-            // But for security/correctness, passing it is best.
-
-            // Since I am already editing `handlers.ts`, I'll implement logic to TRY to get keys.
-            // For now, I'll fetch settings for user ID 1 (standard local user).
-
-            const settings = await services.settings.getSecureSettings(1);
-            const providerKeys: Record<string, string> = {};
-
-            if (settings && settings.aiProviders) {
-                // Settings.aiProviders is Typed? or JSON?
-                // In getSecureSettings it returns the decrypted object.
-                const providers = settings.aiProviders as Record<string, any>;
-                for (const [id, config] of Object.entries(providers)) {
-                    if (config.apiKey) {
-                        providerKeys[id] = config.apiKey;
-                    }
-                }
-            }
-
-            const models = await services.aiRegistry.getAllModels(providerKeys, providerId);
-            return { success: true, data: models };
-        } catch (error: any) {
-            console.error('Error fetching models:', error);
-            return { success: false, data: [], error: error?.message || String(error) };
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.AI.GENERATE, async (_event, userId: number, options: any, providerId?: string) => {
-        try {
-            // Fetch SECURE user settings to get decrypted API keys
-            const settings = await services.settings.getSecureSettings(userId);
-            const aiProviders = settings.aiProviders as any;
-
-            // Logic to determine API key:
-            // 1. If options.apiKey is set, use it.
-            // 2. If providerId is set, check settings.
-            // 3. If modelId is set, find provider and check settings.
-
-            let apiKey = options.apiKey;
-            let targetProviderId = providerId;
-
-            if (!apiKey) {
-                // Determine provider if needed
-                if (!targetProviderId && options.modelId) {
-                    const allModels = await services.aiRegistry.getAllModels();
-                    const model = allModels.find(m => m.id === options.modelId);
-                    if (model) {
-                        targetProviderId = model.providerId;
-                    }
-                }
-
-                // Look up key in settings
-                if (targetProviderId && aiProviders && aiProviders[targetProviderId]) {
-                    apiKey = aiProviders[targetProviderId].apiKey;
-                }
-            }
-
-            const result = await services.aiRegistry.generate({ ...options, apiKey }, providerId);
-            return { success: true, data: result };
-
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.AI.GENERATE, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GMAIL.GET_AUTH_URL, async () => {
-        try {
-            const url = services.gmail.getAuthUrl();
-            return { success: true, data: url };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.GET_AUTH_URL, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GMAIL.OPEN_AUTH_URL, async (_event, userId: number) => {
-        try {
-            const result = await services.gmail.openAuthUrl(userId);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.OPEN_AUTH_URL, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GMAIL.HANDLE_CALLBACK, async (_event, code: string, userId: number) => {
-        try {
-            const tokens = await services.gmail.handleAuthCallback(code, userId);
-            return { success: true, data: tokens };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.HANDLE_CALLBACK, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GMAIL.REVOKE_AUTH, async (_event, userId: number) => {
-        try {
-            const result = await services.gmail.revokeAuth(userId);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.REVOKE_AUTH, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GMAIL.FETCH_NEWSLETTERS, async (_event, userId: number, filters: any) => {
-        try {
-            const emails = await services.gmail.fetchNewsletters(userId, filters);
-            return { success: true, data: emails };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.FETCH_NEWSLETTERS, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GMAIL.GET_LABELS, async (_event, userId: number) => {
-        try {
-            const labels = await services.gmail.getLabels(userId);
-            return { success: true, data: labels };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.GET_LABELS, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GMAIL.TEST_CONNECTION, async (_event, userId: number, filters: any) => {
-        try {
-            const result = await services.gmail.testConnection(userId, filters);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.TEST_CONNECTION, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GMAIL.EXTRACT_HEADLINES, async (_event, emails: any[]) => {
-        try {
-            const headlines = services.gmail.extractHeadlines(emails);
-            return { success: true, data: headlines };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.GMAIL.EXTRACT_HEADLINES, error);
-        }
-    });
-
-    // ============================================================
-    // YOUTUBE HANDLERS
-    // ============================================================
-
-    ipcMain.handle(IPC_CHANNELS.YOUTUBE.VALIDATE_URL, async (_event, url: string) => {
-        try {
-            const isValid = services.youtube.isValidYoutubeUrl(url);
-            return { success: true, data: isValid };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.YOUTUBE.VALIDATE_URL, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.YOUTUBE.EXTRACT_VIDEO_ID, async (_event, url: string) => {
-        try {
-            const videoId = services.youtube.extractVideoId(url);
-            return { success: true, data: videoId };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.YOUTUBE.EXTRACT_VIDEO_ID, error);
-        }
-    });
-
-    ipcMain.handle(IPC_CHANNELS.YOUTUBE.FETCH_VIDEO, async (_event, url: string) => {
-        try {
-            const metadata = await services.youtube.fetchVideoMetadata(url);
-            return { success: true, data: metadata };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.YOUTUBE.FETCH_VIDEO, error);
-        }
-    });
-
-    // ipcMain.handle(IPC_CHANNELS.YOUTUBE.FETCH_TRANSCRIPT, async (_event, videoId: string) => {
-    //     try {
-    //         const transcript = await services.youtube.fetchTranscript(videoId);
-    //         const formatted = services.youtube.formatTranscript(transcript);
-    //         return { success: true, data: formatted };
-    //     } catch (error) {
-    //         return handleIpcError(IPC_CHANNELS.YOUTUBE.FETCH_TRANSCRIPT, error);
-    //     }
-    // });
-
-    ipcMain.handle(IPC_CHANNELS.YOUTUBE.PREVIEW_VIDEO, async (_event, url: string) => {
-        try {
-            const preview = await services.youtube.previewVideo(url);
-            return { success: true, data: preview };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.YOUTUBE.PREVIEW_VIDEO, error);
-        }
-    });
-
+    // YOUTUBE.EXTRACT_HEADLINE needs custom logic
     ipcMain.handle(IPC_CHANNELS.YOUTUBE.EXTRACT_HEADLINE, async (_event, url: string) => {
         try {
             const preview = await services.youtube.previewVideo(url);
@@ -1062,23 +183,11 @@ export function registerIpcHandlers() {
         }
     });
 
-    // ============================================================
-    // FETCH COORDINATOR HANDLERS
-    // ============================================================
+    // ========== FETCH COORDINATOR ==========
+    createHandler(IPC_CHANNELS.FETCH.RUN_ALL_SOURCES, (userId: number) => services.fetchCoordinator.runFetchForAllSources(userId));
 
-    ipcMain.handle(IPC_CHANNELS.FETCH.RUN_ALL_SOURCES, async (_event, userId: number) => {
-        try {
-            const result = await services.fetchCoordinator.runFetchForAllSources(userId);
-            return { success: true, data: result };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.FETCH.RUN_ALL_SOURCES, error);
-        }
-    });
-
-    // ============================================================
-    // COMPILATION HANDLERS
-    // ============================================================
-
+    // ========== COMPILATION ==========
+    // GROUP_HEADLINES needs custom logic (fetch headlines first, then group)
     ipcMain.handle(IPC_CHANNELS.COMPILATION.GROUP_HEADLINES, async (_event, runId: number, options?: any) => {
         try {
             const headlines = await services.headline.getSelectedHeadlines(runId);
@@ -1089,23 +198,63 @@ export function registerIpcHandlers() {
         }
     });
 
-    ipcMain.handle(IPC_CHANNELS.COMPILATION.GENERATE_COMPILATION, async (_event, headlineGroup: any, runId: number, options: any) => {
+    createHandler(IPC_CHANNELS.COMPILATION.GENERATE_COMPILATION, (headlineGroup: any, runId: number, options: any) =>
+        services.compilation.generateCompilation(headlineGroup, runId, options));
+    createHandler(IPC_CHANNELS.COMPILATION.COMPILE_RUN, (runId: number, options: any) =>
+        services.compilation.compileRun(runId, options));
+
+    // ========== AI ==========
+    // AI.GET_MODELS needs custom logic (fetch settings for API keys)
+    ipcMain.handle(IPC_CHANNELS.AI.GET_MODELS, async (_event, providerId?: string) => {
         try {
-            const result = await services.compilation.generateCompilation(headlineGroup, runId, options);
+            const settings = await services.settings.getSecureSettings(DEFAULT_USER_ID);
+            const providerKeys: Record<string, string> = {};
+
+            if (settings?.aiProviders) {
+                const providers = settings.aiProviders as Record<string, any>;
+                for (const [id, config] of Object.entries(providers)) {
+                    if (config.apiKey) {
+                        providerKeys[id] = config.apiKey;
+                    }
+                }
+            }
+
+            const models = await services.aiRegistry.getAllModels(providerKeys, providerId);
+            return { success: true, data: models };
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            log.error('[IPC] Error fetching models:', error);
+            return { success: false, data: [], error: message };
+        }
+    });
+
+    // AI.GENERATE needs custom logic (fetch settings, resolve API key)
+    ipcMain.handle(IPC_CHANNELS.AI.GENERATE, async (_event, userId: number, options: any, providerId?: string) => {
+        try {
+            const settings = await services.settings.getSecureSettings(userId);
+            const aiProviders = settings.aiProviders as Record<string, any>;
+
+            let apiKey = options.apiKey;
+            let targetProviderId = providerId;
+
+            if (!apiKey) {
+                if (!targetProviderId && options.modelId) {
+                    const allModels = await services.aiRegistry.getAllModels();
+                    const model = allModels.find((m: any) => m.id === options.modelId);
+                    if (model) targetProviderId = model.providerId;
+                }
+
+                if (targetProviderId && aiProviders?.[targetProviderId]) {
+                    apiKey = aiProviders[targetProviderId].apiKey;
+                }
+            }
+
+            const result = await services.aiRegistry.generate({ ...options, apiKey }, providerId);
             return { success: true, data: result };
         } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILATION.GENERATE_COMPILATION, error);
+            return handleIpcError(IPC_CHANNELS.AI.GENERATE, error);
         }
     });
 
-    ipcMain.handle(IPC_CHANNELS.COMPILATION.COMPILE_RUN, async (_event, runId: number, options: any) => {
-        try {
-            const results = await services.compilation.compileRun(runId, options);
-            return { success: true, data: results };
-        } catch (error) {
-            return handleIpcError(IPC_CHANNELS.COMPILATION.COMPILE_RUN, error);
-        }
-    });
-
-    console.log('[IPC] All handlers registered successfully');
+    log.info('[IPC] All handlers registered');
 }

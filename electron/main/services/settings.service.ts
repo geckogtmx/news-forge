@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { eq } from 'drizzle-orm';
 import { safeStorage } from 'electron';
 import { db } from '../db';
@@ -27,7 +28,7 @@ export class SettingsService {
             try {
                 return safeStorage.decryptString(Buffer.from(text, 'base64'));
             } catch (error) {
-                console.error('Failed to decrypt settings:', error);
+                log.error('[SettingsService] Failed to decrypt settings:', error);
                 return '';
             }
         }

@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
@@ -24,7 +25,7 @@ class GeminiService {
             throw new Error('Gemini API key is required');
         }
         this.client = new GoogleGenerativeAI(apiKey);
-        console.log('[Gemini] Service initialized with model:', this.model);
+        log.info('[Gemini] Service initialized with model:', this.model);
     }
 
     /**
@@ -45,7 +46,7 @@ class GeminiService {
         this.ensureInitialized();
 
         try {
-            console.log('[Gemini] Analyzing YouTube metadata');
+            log.info('[Gemini] Analyzing YouTube metadata');
 
             const model = this.client!.getGenerativeModel({ model: this.model });
 
@@ -72,20 +73,17 @@ Format as JSON:
             const response = result.response;
             const text = response.text();
 
-            console.log('[Gemini] Raw response:', text.substring(0, 200) + '...');
-
             // Parse the JSON response
             const analysis = this.parseGeminiResponse(text);
 
-            console.log('[Gemini] Analysis complete:', {
+            log.info('[Gemini] Analysis complete:', {
                 topics: analysis.topics.length,
-                summaryLength: analysis.summary.length,
                 keyPoints: analysis.keyPoints.length
             });
 
             return analysis;
         } catch (error: any) {
-            console.error('[Gemini] Error analyzing metadata:', error);
+            log.error('[Gemini] Error analyzing metadata:', error);
             throw new Error(`Failed to analyze with Gemini: ${error.message}`);
         }
     }
@@ -111,7 +109,7 @@ Format as JSON:
                 keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : []
             };
         } catch (error) {
-            console.error('[Gemini] Failed to parse response, using fallback');
+            log.warn('[Gemini] Failed to parse JSON response, using fallback');
 
             // Fallback: Try to extract information from unstructured text
             return this.extractFromUnstructuredText(text);
@@ -155,10 +153,10 @@ Format as JSON:
             const model = this.client!.getGenerativeModel({ model: this.model });
             const result = await model.generateContent('Say "OK" if you can read this.');
             const text = result.response.text();
-            console.log('[Gemini] Connection test:', text);
+            log.info('[Gemini] Connection test successful');
             return true;
         } catch (error) {
-            console.error('[Gemini] Connection test failed:', error);
+            log.error('[Gemini] Connection test failed:', error);
             return false;
         }
     }

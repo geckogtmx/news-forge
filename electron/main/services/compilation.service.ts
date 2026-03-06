@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { aiRegistry } from './ai/ai.registry';
 import { headlineService } from './headline.service';
 import { compiledItemService } from './compiled.service';
@@ -337,7 +338,7 @@ Format your response as JSON:
                 summary: parsed.summary || content,
             };
         } catch (error) {
-            console.warn('[CompilationService] Failed to parse JSON:', content);
+            log.warn('[CompilationService] Failed to parse JSON response, using fallback');
             // Fallback: extract from text
             return {
                 topic: 'Untitled',

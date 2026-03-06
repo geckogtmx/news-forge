@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { AIProvider, AIModel, AIRequestOptions, AIResponse } from './base.provider';
 
 export class AnthropicProvider implements AIProvider {
@@ -72,7 +73,7 @@ export class AnthropicProvider implements AIProvider {
                 }
             };
         } catch (error) {
-            console.error('Anthropic generate error:', error);
+            log.error('[AnthropicProvider] Generate error:', error);
             throw error;
         }
     }

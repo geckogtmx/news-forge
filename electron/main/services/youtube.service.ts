@@ -7,6 +7,7 @@
  * - Gemini AI for video content analysis (topics, summary)
  */
 
+import log from 'electron-log';
 import { geminiService } from './gemini.service';
 
 export interface VideoMetadata {
@@ -123,7 +124,7 @@ class YouTubeService {
                 channelName,
             };
         } catch (error) {
-            console.error('Error fetching video metadata:', error);
+            log.error('[YouTube] Error fetching video metadata:', error);
             throw new Error('Failed to fetch video metadata. The video may be private or deleted.');
         }
     }
@@ -133,7 +134,7 @@ class YouTubeService {
      */
     async analyzeVideoWithGemini(metadata: VideoMetadata): Promise<VideoSummary> {
         try {
-            console.log('[YouTube] Analyzing with Gemini AI...');
+            log.info('[YouTube] Analyzing with Gemini AI...');
 
             const analysis = await geminiService.analyzeYoutubeMetadata(
                 metadata.title,
@@ -146,7 +147,7 @@ class YouTubeService {
                 fullTranscript: analysis.keyPoints.join('\n'), // Store key points as "transcript"
             };
         } catch (error: any) {
-            console.error('[YouTube] Gemini analysis failed:', error);
+            log.error('[YouTube] Gemini analysis failed:', error);
             throw new Error(`Failed to analyze video: ${error.message}`);
         }
     }
@@ -188,20 +189,20 @@ class YouTubeService {
             throw new Error('Could not extract video ID from URL');
         }
 
-        console.log('[YouTube] Fetching video:', videoId);
+        log.info('[YouTube] Fetching video:', videoId);
 
         // Fetch metadata
         const metadata = await this.fetchVideoMetadata(url);
-        console.log('[YouTube] Metadata fetched:', metadata.title);
+        log.info('[YouTube] Metadata fetched:', metadata.title);
 
         // Analyze with Gemini
         let summary: VideoSummary;
         try {
             summary = await this.analyzeVideoWithGemini(metadata);
-            console.log('[YouTube] Gemini analysis complete');
+            log.info('[YouTube] Gemini analysis complete');
         } catch (error) {
-            console.error('[YouTube] Gemini analysis failed:', error);
-            console.warn('[YouTube] Using basic metadata as fallback');
+            log.error('[YouTube] Gemini analysis failed:', error);
+            log.warn('[YouTube] Using basic metadata as fallback');
 
             // Fallback to basic metadata if Gemini fails
             summary = {

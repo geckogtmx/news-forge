@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { net } from 'electron';
 
 export interface HFPaper {
@@ -22,7 +23,7 @@ export class HuggingFaceService {
     async fetchDailyPapers(date?: string): Promise<any[]> {
         const url = date ? `${this.API_BASE}?date=${date}` : this.API_BASE;
 
-        console.log(`[HuggingFace] Fetching daily papers from ${url}`);
+        log.info(`[HuggingFace] Fetching daily papers from ${url}`);
 
         try {
             const response = await fetch(url);
@@ -32,7 +33,7 @@ export class HuggingFaceService {
             const data = await response.json();
             return this.formatPapers(data);
         } catch (error) {
-            console.error('[HuggingFace] Error fetching papers:', error);
+            log.error('[HuggingFace] Error fetching papers:', error);
             throw error;
         }
     }

@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import Parser from 'rss-parser';
 import { net } from 'electron';
 import type { InsertRawHeadline } from '../db/schema';
@@ -53,7 +54,7 @@ export class RssService {
                 return feed as Feed;
             } catch (error: any) {
                 lastError = error;
-                console.error(`[RSS] Attempt ${attempt}/${this.MAX_RETRIES} failed for ${url}:`, error.message);
+                log.error(`[RSS] Attempt ${attempt}/${this.MAX_RETRIES} failed for ${url}:`, error.message);
 
                 if (attempt < this.MAX_RETRIES) {
                     await this.delay(this.RETRY_DELAY_MS * attempt);
@@ -183,7 +184,7 @@ export class RssService {
 
             return discovered;
         } catch (error: any) {
-            console.error('[RSS] Feed discovery failed:', error.message);
+            log.error('[RSS] Feed discovery failed:', error.message);
             throw new Error(`Feed discovery failed: ${error.message}`);
         }
     }

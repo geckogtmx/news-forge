@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { AIProvider, AIModel, AIRequestOptions, AIResponse } from './base.provider';
 
 export class OpenAIProvider implements AIProvider {
@@ -86,7 +87,7 @@ export class OpenAIProvider implements AIProvider {
                 }
             };
         } catch (error) {
-            console.error('OpenAI generate error:', error);
+            log.error('[OpenAIProvider] Generate error:', error);
             throw error;
         }
     }

@@ -17,6 +17,8 @@ import { useHeadlines } from "@/hooks/useHeadlines";
 import { useRuns } from "@/hooks/useRuns";
 import { useAI, type AIModel } from "@/hooks/useAI";
 import { useSettings } from "@/hooks/useSettings";
+import { useUserContext } from "@/contexts/UserContext";
+import { DEFAULT_USER_ID } from "../../electron/shared/constants";
 import type { CompiledItem } from "../../electron/main/db/schema";
 
 export default function Compilation() {
@@ -29,6 +31,8 @@ export default function Compilation() {
   const { run, fetchRunById } = useRuns();
   const { getModels } = useAI();
   const { getSettings: fetchSettings } = useSettings();
+  const { currentUser } = useUserContext();
+  const userId = currentUser?.id ?? DEFAULT_USER_ID;
 
   const [items, setItems] = useState<CompiledItem[]>([]);
   const [selectedHeadlines, setSelectedHeadlines] = useState<typeof headlines>([]);
@@ -44,29 +48,19 @@ export default function Compilation() {
 
   // Load run and compilations
   useEffect(() => {
-    console.log("[Compilation] useEffect triggered. Location:", location, "RunId from URL:", runId);
     const loadData = async () => {
       if (runId) {
         const id = parseInt(runId);
-        console.log("[Compilation] Loading data for runId:", id);
         fetchRunById(id);
         fetchCompiledItemsByRun(id);
 
-        // Fetch user settings to get preferences
         try {
-          const userSettings = await fetchSettings(1); // TODO: Get userId from auth
+          const userSettings = await fetchSettings(userId);
           setSettings(userSettings);
-        } catch (e) {
-          console.error("Failed to load settings", e);
-        }
+        } catch (_) { /* settings load failure is non-critical */ }
 
-        // Use dedicated getSelectedHeadlines IPC instead of filter
-        console.log("[Compilation] Calling getSelectedHeadlines for runId:", id);
         const headlineResult = await getSelectedHeadlines(id);
-        console.log("[Compilation] getSelectedHeadlines result:", headlineResult, "count:", headlineResult?.length);
         setSelectedHeadlines(headlineResult || []);
-      } else {
-        console.warn("[Compilation] No runId in URL! Location:", location);
       }
     };
     loadData();
